@@ -2,9 +2,10 @@ import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { getStudents } from "@/lib/actions/students";
 import { getClasses } from "@/lib/actions/classes";
+import { AddStudentDialog } from "@/components/students/add-student-dialog";
 import Link from "next/link";
 
 export default async function StudentsPage({
@@ -63,10 +64,7 @@ export default async function StudentsPage({
               검색
             </Button>
           </form>
-          <Button className="bg-vb-primary hover:bg-vb-primary-hover text-white gap-2">
-            <Plus className="w-4 h-4" />
-            학생 추가
-          </Button>
+          <AddStudentDialog />
         </div>
 
         {/* Table */}

@@ -1,8 +1,7 @@
 import { Header } from "@/components/layout/header";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus } from "lucide-react";
 import { getVocabBooks } from "@/lib/actions/vocab";
+import { AddBookDialog } from "@/components/vocab/add-book-dialog";
 import Link from "next/link";
 
 export default async function VocabPage() {
@@ -17,10 +16,7 @@ export default async function VocabPage() {
           <h2 className="text-base font-semibold text-vb-text-primary">
             전체 단어장
           </h2>
-          <Button className="bg-vb-primary hover:bg-vb-primary-hover text-white gap-2">
-            <Plus className="w-4 h-4" />
-            단어장 추가
-          </Button>
+          <AddBookDialog />
         </div>
 
         {/* Card Grid */}

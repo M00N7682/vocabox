@@ -1,9 +1,10 @@
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { getStudent, getStudentScores } from "@/lib/actions/students";
 import { notFound } from "next/navigation";
+import { EditStudentDialog } from "@/components/students/edit-student-dialog";
 
 export default async function StudentDetailPage({
   params,
@@ -42,10 +43,7 @@ export default async function StudentDetailPage({
               뒤로
             </Button>
           </Link>
-          <Button variant="outline" size="sm" className="gap-2 text-[13px]">
-            <Pencil className="w-4 h-4" />
-            수정
-          </Button>
+          <EditStudentDialog student={student} />
         </div>
 
         {/* Main content */}

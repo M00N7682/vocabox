@@ -3,9 +3,19 @@
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Eye, Download, Printer } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { recordTestPrint } from "@/lib/actions/tests";
 import type { Student, VocabBook, VocabWord } from "@/types/database";
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 export default function TestsPage() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -17,6 +27,8 @@ export default function TestsPage() {
     "eng_to_kor"
   );
   const [shuffle, setShuffle] = useState(false);
+  const [shuffledWords, setShuffledWords] = useState<VocabWord[]>([]);
+  const [showAllWords, setShowAllWords] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -45,22 +57,67 @@ export default function TestsPage() {
       .select("*")
       .eq("vocab_book_id", selectedBook)
       .order("sort_order")
-      .then(({ data }) => setWords((data ?? []) as VocabWord[]));
-  }, [selectedBook]);
+      .then(({ data }) => {
+        const w = (data ?? []) as VocabWord[];
+        setWords(w);
+        setShuffledWords(shuffle ? shuffleArray(w) : w);
+      });
+  }, [selectedBook, shuffle]);
+
+  // When shuffle is toggled off, reset shuffled words to original order
+  useEffect(() => {
+    if (!shuffle) {
+      setShuffledWords(words);
+    }
+  }, [shuffle, words]);
 
   const selectedStudentName =
     students.find((s) => s.id === selectedStudent)?.name ?? "";
   const selectedBookTitle =
     books.find((b) => b.id === selectedBook)?.title ?? "";
 
-  const displayWords = shuffle ? [...words].sort(() => Math.random() - 0.5) : words;
+  const displayWords = shuffle ? shuffledWords : words;
+
+  const handleGeneratePreview = useCallback(() => {
+    if (shuffle) {
+      setShuffledWords(shuffleArray(words));
+    }
+  }, [shuffle, words]);
+
+  const handlePrint = useCallback(async () => {
+    // Record the print action
+    if (selectedStudent && selectedBook) {
+      recordTestPrint({
+        studentId: selectedStudent,
+        vocabBookId: selectedBook,
+        testType,
+        isShuffled: shuffle,
+      });
+    }
+
+    // Show all words for printing, then trigger print
+    setShowAllWords(true);
+    // Use requestAnimationFrame to ensure state update is rendered before printing
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.print();
+        // Reset after print dialog closes
+        setShowAllWords(false);
+      });
+    });
+  }, [selectedStudent, selectedBook, testType, shuffle]);
+
+  const previewLimit = 10;
+  const wordsToShow = showAllWords
+    ? displayWords
+    : displayWords.slice(0, previewLimit);
 
   return (
     <>
       <Header title="시험지 생성" />
-      <div className="flex gap-8 p-8">
+      <div className="flex gap-8 p-8 test-page-container">
         {/* Left - Form */}
-        <div className="w-[480px] shrink-0 bg-white rounded-xl border border-vb-border p-8">
+        <div className="w-[480px] shrink-0 bg-white rounded-xl border border-vb-border p-8 test-settings-panel">
           <h2 className="text-lg font-semibold text-vb-text-primary mb-6">
             시험지 설정
           </h2>
@@ -200,7 +257,10 @@ export default function TestsPage() {
               </span>
             </div>
 
-            <Button className="w-full h-11 bg-vb-primary hover:bg-vb-primary-hover text-white gap-2 text-[15px]">
+            <Button
+              onClick={handleGeneratePreview}
+              className="w-full h-11 bg-vb-primary hover:bg-vb-primary-hover text-white gap-2 text-[15px]"
+            >
               <Eye className="w-4 h-4" />
               미리보기 생성
             </Button>
@@ -208,8 +268,8 @@ export default function TestsPage() {
         </div>
 
         {/* Right - Preview */}
-        <div className="flex-1 bg-white rounded-xl border border-vb-border p-8">
-          <div className="flex items-center justify-between mb-6">
+        <div className="flex-1 bg-white rounded-xl border border-vb-border p-8 test-preview-panel">
+          <div className="flex items-center justify-between mb-6 test-preview-toolbar">
             <h2 className="text-lg font-semibold text-vb-text-primary">
               시험지 미리보기
             </h2>
@@ -218,6 +278,8 @@ export default function TestsPage() {
                 variant="outline"
                 size="sm"
                 className="gap-2 text-[13px]"
+                onClick={handlePrint}
+                title="PDF로 저장하려면 인쇄 대화상자에서 'PDF로 저장'을 선택하세요"
               >
                 <Download className="w-4 h-4" />
                 PDF
@@ -226,6 +288,7 @@ export default function TestsPage() {
                 variant="outline"
                 size="sm"
                 className="gap-2 text-[13px]"
+                onClick={handlePrint}
               >
                 <Printer className="w-4 h-4" />
                 인쇄
@@ -234,7 +297,7 @@ export default function TestsPage() {
           </div>
 
           {/* Preview Sheet */}
-          <div className="bg-vb-bg-muted rounded-lg p-8">
+          <div className="bg-vb-bg-muted rounded-lg p-8 test-preview-sheet">
             <div className="text-center mb-6">
               <h3 className="text-base font-bold text-vb-text-primary mb-1">
                 단어 시험지
@@ -263,7 +326,7 @@ export default function TestsPage() {
                     단어장을 선택하면 미리보기가 표시됩니다.
                   </p>
                 ) : (
-                  displayWords.slice(0, 10).map((w, i) => (
+                  wordsToShow.map((w, i) => (
                     <div key={w.id} className="flex items-center gap-4">
                       <span className="text-sm text-vb-text-tertiary w-6">
                         {i + 1}.
@@ -275,9 +338,9 @@ export default function TestsPage() {
                     </div>
                   ))
                 )}
-                {displayWords.length > 10 && (
+                {!showAllWords && displayWords.length > previewLimit && (
                   <p className="text-xs text-vb-text-tertiary text-center">
-                    ... 외 {displayWords.length - 10}문항
+                    ... 외 {displayWords.length - previewLimit}문항
                   </p>
                 )}
               </div>

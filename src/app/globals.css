@@ -117,3 +117,72 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Print styles for test sheet */
+@media print {
+  /* Hide sidebar */
+  aside {
+    display: none !important;
+  }
+
+  /* Hide header */
+  header {
+    display: none !important;
+  }
+
+  /* Hide the settings panel (left form) */
+  .test-settings-panel {
+    display: none !important;
+  }
+
+  /* Hide preview toolbar (buttons) */
+  .test-preview-toolbar {
+    display: none !important;
+  }
+
+  /* Make the main content area full width with no overflow constraints */
+  main {
+    overflow: visible !important;
+    width: 100% !important;
+    flex: none !important;
+    display: block !important;
+  }
+
+  /* Make the page container fill the page */
+  .test-page-container {
+    padding: 0 !important;
+    gap: 0 !important;
+    display: block !important;
+  }
+
+  /* Make the preview panel fill the full width */
+  .test-preview-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    flex: none !important;
+  }
+
+  /* Clean up the preview sheet for print */
+  .test-preview-sheet {
+    background: white !important;
+    border-radius: 0 !important;
+    padding: 24px 0 !important;
+  }
+
+  /* Ensure page break behavior works well for long word lists */
+  .test-preview-sheet .flex.flex-col.gap-4 {
+    break-inside: auto;
+  }
+
+  .test-preview-sheet .flex.items-center.gap-4 {
+    break-inside: avoid;
+  }
+
+  /* Remove background colors */
+  body {
+    background: white !important;
+  }
+}
