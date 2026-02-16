@@ -1,0 +1,111 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import type { Class } from "@/types/database";
+
+export type ClassWithStudents = Class & {
+  class_students: { student_id: string }[];
+};
+
+export async function getClasses(): Promise<ClassWithStudents[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("classes")
+    .select("*, class_students(student_id)")
+    .order("sort_order");
+
+  if (error) throw error;
+  return (data as unknown as ClassWithStudents[]) ?? [];
+}
+
+export async function getClass(id: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("classes")
+    .select(
+      "*, class_students(student_id, students(id, name, english_name, is_active))"
+    )
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return data as unknown as Class & {
+    class_students: {
+      student_id: string;
+      students: { id: string; name: string; english_name: string | null; is_active: boolean } | null;
+    }[];
+  };
+}
+
+export async function createClass(formData: FormData) {
+  const supabase = await createClient();
+
+  const profile = await supabase
+    .from("profiles")
+    .select("academy_id")
+    .single();
+
+  if (!profile.data) return { error: "프로필을 찾을 수 없습니다." };
+
+  const { error } = await supabase.from("classes").insert({
+    academy_id: profile.data.academy_id,
+    name: formData.get("name") as string,
+    description: (formData.get("description") as string) || null,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/classes");
+  return { success: true };
+}
+
+export async function updateClass(id: string, formData: FormData) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("classes")
+    .update({
+      name: formData.get("name") as string,
+      description: (formData.get("description") as string) || null,
+    })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/classes");
+  return { success: true };
+}
+
+export async function addStudentToClass(classId: string, studentId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("class_students")
+    .insert({ class_id: classId, student_id: studentId });
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/classes");
+  return { success: true };
+}
+
+export async function removeStudentFromClass(
+  classId: string,
+  studentId: string
+) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("class_students")
+    .delete()
+    .eq("class_id", classId)
+    .eq("student_id", studentId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/classes");
+  return { success: true };
+}

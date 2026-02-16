@@ -1,0 +1,92 @@
+-- ============================================
+-- AiVoca Seed Data
+-- Run this after creating a user via the app signup flow.
+-- Replace the UUIDs below with actual values from your setup.
+-- ============================================
+
+-- This seed is meant to be run manually after initial setup.
+-- The academy and profile are created during the signup flow.
+-- Below is sample data assuming academy_id and user_id exist.
+
+-- To use: after signing up, get your academy_id from the profiles table,
+-- then replace 'YOUR_ACADEMY_ID' below and run in Supabase SQL editor.
+
+-- Example usage:
+-- DO $$
+-- DECLARE
+--   v_academy_id uuid := 'YOUR_ACADEMY_ID';
+--   v_class_a uuid;
+--   v_class_b uuid;
+--   v_class_c uuid;
+--   v_student_1 uuid;
+--   v_student_2 uuid;
+--   v_student_3 uuid;
+--   v_student_4 uuid;
+--   v_student_5 uuid;
+--   v_book_1 uuid;
+--   v_book_2 uuid;
+--   v_book_3 uuid;
+-- BEGIN
+--   -- Classes
+--   INSERT INTO classes (academy_id, name, description, sort_order) VALUES
+--     (v_academy_id, '중등 A반', '월수금 4시', 1) RETURNING id INTO v_class_a;
+--   INSERT INTO classes (academy_id, name, description, sort_order) VALUES
+--     (v_academy_id, '중등 B반', '화목 5시', 2) RETURNING id INTO v_class_b;
+--   INSERT INTO classes (academy_id, name, description, sort_order) VALUES
+--     (v_academy_id, '고등 심화반', '월수금 6시', 3) RETURNING id INTO v_class_c;
+--
+--   -- Students
+--   INSERT INTO students (academy_id, name, english_name, school, grade, is_active) VALUES
+--     (v_academy_id, '홍길동', 'David', 'OO중학교', '중2', true) RETURNING id INTO v_student_1;
+--   INSERT INTO students (academy_id, name, english_name, school, grade, is_active) VALUES
+--     (v_academy_id, '김영희', 'Emily', 'OO중학교', '중2', true) RETURNING id INTO v_student_2;
+--   INSERT INTO students (academy_id, name, english_name, school, grade, is_active) VALUES
+--     (v_academy_id, '박철수', 'Chris', 'OO중학교', '중3', true) RETURNING id INTO v_student_3;
+--   INSERT INTO students (academy_id, name, english_name, school, grade, is_active) VALUES
+--     (v_academy_id, '이수진', 'Susan', 'OO고등학교', '고1', true) RETURNING id INTO v_student_4;
+--   INSERT INTO students (academy_id, name, english_name, school, grade, is_active) VALUES
+--     (v_academy_id, '정민수', 'Mike', 'OO중학교', '중2', true) RETURNING id INTO v_student_5;
+--
+--   -- Class-Student assignments
+--   INSERT INTO class_students (class_id, student_id) VALUES
+--     (v_class_a, v_student_1), (v_class_a, v_student_2), (v_class_a, v_student_5),
+--     (v_class_b, v_student_3),
+--     (v_class_c, v_student_4);
+--
+--   -- Vocab Books
+--   INSERT INTO vocab_books (academy_id, title, description, word_count) VALUES
+--     (v_academy_id, '중등 필수 영단어 Day 1~10', '중학교 필수 단어 300개 중 1~10일차', 30) RETURNING id INTO v_book_1;
+--   INSERT INTO vocab_books (academy_id, title, description, word_count) VALUES
+--     (v_academy_id, '중등 필수 영단어 Day 11~20', '중학교 필수 단어 300개 중 11~20일차', 30) RETURNING id INTO v_book_2;
+--   INSERT INTO vocab_books (academy_id, title, description, word_count) VALUES
+--     (v_academy_id, '고등 수능 영단어 Day 1~15', '수능 필수 단어 450개 중 1~15일차', 45) RETURNING id INTO v_book_3;
+--
+--   -- Sample words for book 1
+--   INSERT INTO vocab_words (vocab_book_id, english, korean, sort_order) VALUES
+--     (v_book_1, 'apple', '사과', 1),
+--     (v_book_1, 'accomplish', '성취하다', 2),
+--     (v_book_1, 'abbreviation', '약어', 3),
+--     (v_book_1, 'abundant', '풍부한', 4),
+--     (v_book_1, 'accelerate', '가속하다', 5),
+--     (v_book_1, 'accurate', '정확한', 6),
+--     (v_book_1, 'achieve', '달성하다', 7),
+--     (v_book_1, 'acknowledge', '인정하다', 8),
+--     (v_book_1, 'adapt', '적응하다', 9),
+--     (v_book_1, 'adequate', '적절한', 10);
+--
+--   -- Scores
+--   INSERT INTO scores (academy_id, student_id, vocab_book_id, test_date, correct_count, total_count, score_percentage, test_type) VALUES
+--     (v_academy_id, v_student_1, v_book_1, '2026-02-15', 28, 30, 93.33, 'eng_to_kor'),
+--     (v_academy_id, v_student_1, v_book_1, '2026-02-14', 24, 30, 80.00, 'kor_to_eng'),
+--     (v_academy_id, v_student_2, v_book_1, '2026-02-15', 25, 30, 83.33, 'eng_to_kor'),
+--     (v_academy_id, v_student_3, v_book_1, '2026-02-15', 30, 30, 100.00, 'eng_to_kor'),
+--     (v_academy_id, v_student_4, v_book_1, '2026-02-15', 22, 30, 73.33, 'eng_to_kor');
+--
+--   -- Schedules
+--   INSERT INTO schedules (academy_id, student_id, vocab_book_id, scheduled_date, status) VALUES
+--     (v_academy_id, v_student_1, v_book_2, '2026-02-16', 'scheduled'),
+--     (v_academy_id, v_student_2, v_book_2, '2026-02-16', 'scheduled'),
+--     (v_academy_id, v_student_3, v_book_1, '2026-02-16', 'scheduled'),
+--     (v_academy_id, v_student_1, v_book_2, '2026-02-17', 'scheduled'),
+--     (v_academy_id, v_student_1, v_book_1, '2026-02-14', 'completed');
+-- END $$;
