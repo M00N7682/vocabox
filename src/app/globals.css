@@ -9,31 +9,35 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
 
-  /* Design System Colors */
-  --color-vb-primary: #3B82F6;
-  --color-vb-primary-hover: #2563EB;
-  --color-vb-primary-light: #EFF6FF;
-  --color-vb-success: #22C55E;
-  --color-vb-success-light: #F0FDF4;
-  --color-vb-warning: #F59E0B;
-  --color-vb-warning-light: #FFFBEB;
-  --color-vb-danger: #EF4444;
-  --color-vb-danger-light: #FEF2F2;
-  --color-vb-info: #6366F1;
-  --color-vb-info-light: #EEF2FF;
-  --color-vb-bg-page: #FFFFFF;
-  --color-vb-bg-muted: #F1F5F9;
-  --color-vb-bg-card: #F8FAFC;
-  --color-vb-bg-sidebar: #0F172A;
-  --color-vb-bg-sidebar-hover: #1E293B;
-  --color-vb-bg-sidebar-active: #1E40AF;
-  --color-vb-text-primary: #0F172A;
-  --color-vb-text-secondary: #64748B;
-  --color-vb-text-tertiary: #94A3B8;
-  --color-vb-text-white: #FFFFFF;
-  --color-vb-border: #E2E8F0;
-  --color-vb-border-light: #F1F5F9;
-  --color-vb-border-focus: #3B82F6;
+  /* EduOps Design System Colors */
+  --color-eo-primary: #4F46E5;
+  --color-eo-primary-hover: #4338CA;
+  --color-eo-primary-light: #EEF2FF;
+  --color-eo-success: #10B981;
+  --color-eo-success-light: #ECFDF5;
+  --color-eo-warning: #F59E0B;
+  --color-eo-warning-light: #FFFBEB;
+  --color-eo-danger: #EF4444;
+  --color-eo-danger-light: #FEF2F2;
+  --color-eo-info: #3B82F6;
+  --color-eo-info-light: #EFF6FF;
+  --color-eo-bg-page: #F8FAFC;
+  --color-eo-bg-muted: #F8FAFC;
+  --color-eo-bg-surface: #F1F5F9;
+  --color-eo-bg-card: #FFFFFF;
+  --color-eo-bg-sidebar: #111827;
+  --color-eo-bg-sidebar-hover: #1F2937;
+  --color-eo-bg-sidebar-active: #FFFFFF;
+  --color-eo-text-primary: #111827;
+  --color-eo-text-secondary: #6B7280;
+  --color-eo-text-tertiary: #9CA3AF;
+  --color-eo-text-white: #FFFFFF;
+  --color-eo-border: #E5E7EB;
+  --color-eo-border-strong: #D1D5DB;
+  --color-eo-border-focus: #4F46E5;
+  --color-eo-sidebar-text: #E5E7EB;
+  --color-eo-sidebar-text-muted: #9CA3AF;
+  --color-eo-placeholder: #9CA3AF;
 
   /* shadcn overrides */
   --color-sidebar-ring: var(--sidebar-ring);
@@ -76,37 +80,37 @@
 
 :root {
   --radius: 0.625rem;
-  --background: #FFFFFF;
-  --foreground: #0F172A;
+  --background: #F8FAFC;
+  --foreground: #111827;
   --card: #FFFFFF;
-  --card-foreground: #0F172A;
+  --card-foreground: #111827;
   --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
-  --primary: #3B82F6;
+  --popover-foreground: #111827;
+  --primary: #4F46E5;
   --primary-foreground: #FFFFFF;
   --secondary: #F1F5F9;
-  --secondary-foreground: #0F172A;
+  --secondary-foreground: #111827;
   --muted: #F1F5F9;
-  --muted-foreground: #64748B;
+  --muted-foreground: #6B7280;
   --accent: #F1F5F9;
-  --accent-foreground: #0F172A;
+  --accent-foreground: #111827;
   --destructive: #EF4444;
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #3B82F6;
-  --chart-1: #3B82F6;
-  --chart-2: #22C55E;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #4F46E5;
+  --chart-1: #4F46E5;
+  --chart-2: #10B981;
   --chart-3: #F59E0B;
   --chart-4: #EF4444;
-  --chart-5: #6366F1;
-  --sidebar: #0F172A;
-  --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #3B82F6;
+  --chart-5: #3B82F6;
+  --sidebar: #111827;
+  --sidebar-foreground: #E5E7EB;
+  --sidebar-primary: #4F46E5;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #1E293B;
+  --sidebar-accent: #1F2937;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #1E293B;
-  --sidebar-ring: #3B82F6;
+  --sidebar-border: #1F2937;
+  --sidebar-ring: #4F46E5;
 }
 
 @layer base {
@@ -120,42 +124,29 @@
 
 /* Print styles for test sheet */
 @media print {
-  /* Hide sidebar */
   aside {
     display: none !important;
   }
-
-  /* Hide header */
   header {
     display: none !important;
   }
-
-  /* Hide the settings panel (left form) */
   .test-settings-panel {
     display: none !important;
   }
-
-  /* Hide preview toolbar (buttons) */
   .test-preview-toolbar {
     display: none !important;
   }
-
-  /* Make the main content area full width with no overflow constraints */
   main {
     overflow: visible !important;
     width: 100% !important;
     flex: none !important;
     display: block !important;
   }
-
-  /* Make the page container fill the page */
   .test-page-container {
     padding: 0 !important;
     gap: 0 !important;
     display: block !important;
   }
-
-  /* Make the preview panel fill the full width */
   .test-preview-panel {
     width: 100% !important;
     max-width: 100% !important;
@@ -164,24 +155,17 @@
     padding: 0 !important;
     flex: none !important;
   }
-
-  /* Clean up the preview sheet for print */
   .test-preview-sheet {
     background: white !important;
     border-radius: 0 !important;
     padding: 24px 0 !important;
   }
-
-  /* Ensure page break behavior works well for long word lists */
   .test-preview-sheet .flex.flex-col.gap-4 {
     break-inside: auto;
   }
-
   .test-preview-sheet .flex.items-center.gap-4 {
     break-inside: avoid;
   }
-
-  /* Remove background colors */
   body {
     background: white !important;
   }

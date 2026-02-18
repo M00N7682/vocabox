@@ -2,23 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 
-export type ScheduleItem = {
-  id: string;
-  status: string;
-  students: { name: string } | null;
-  vocab_books: { title: string } | null;
-};
-
-export type RecentScore = {
-  id: string;
-  test_date: string;
-  score_percentage: number;
-  test_type: string;
-  student_id: string;
-  students: { name: string } | null;
-  vocab_books: { title: string } | null;
-};
-
 export async function getDashboardData() {
   const supabase = await createClient();
 
@@ -27,61 +10,128 @@ export async function getDashboardData() {
 
   const [
     studentsResult,
-    vocabBooksResult,
-    monthScoresResult,
-    todaySchedulesResult,
-    recentScoresResult,
+    subjectsResult,
+    monthAssessmentsResult,
+    assessmentScoresResult,
+    todayAttendanceResult,
+    recentAssessmentsResult,
+    textbooksResult,
   ] = await Promise.all([
     supabase
       .from("students")
       .select("id", { count: "exact", head: true })
       .eq("is_active", true),
     supabase
-      .from("vocab_books")
-      .select("id", { count: "exact", head: true }),
+      .from("subjects")
+      .select("id, name")
+      .order("sort_order"),
     supabase
-      .from("scores")
-      .select("score_percentage")
-      .gte("test_date", monthStart),
+      .from("assessments")
+      .select("id")
+      .gte("date", monthStart),
     supabase
-      .from("schedules")
-      .select("id, status, students(name), vocab_books(title)")
-      .eq("scheduled_date", today)
+      .from("assessment_scores")
+      .select("score, assessments!inner(date)")
+      .not("score", "is", null)
+      .gte("assessments.date", monthStart),
+    supabase
+      .from("attendance")
+      .select("status, students(name), subjects(name)")
+      .eq("date", today)
       .order("created_at"),
     supabase
-      .from("scores")
-      .select(
-        "id, test_date, score_percentage, test_type, student_id, students(name), vocab_books(title)"
-      )
-      .order("created_at", { ascending: false })
+      .from("assessments")
+      .select("id, name, date, type, subjects(name, color), assessment_scores(score)")
+      .order("date", { ascending: false })
+      .limit(5),
+    supabase
+      .from("textbooks")
+      .select("id, name, subjects(color), textbook_chapters(status)")
+      .order("sort_order")
       .limit(5),
   ]);
 
   const studentCount = studentsResult.count ?? 0;
-  const vocabBookCount = vocabBooksResult.count ?? 0;
+  const subjectCount = (subjectsResult.data ?? []).length;
+  const subjectNames = (subjectsResult.data ?? [])
+    .slice(0, 2)
+    .map((s) => s.name)
+    .join(", ");
+  const monthAssessmentCount = (monthAssessmentsResult.data ?? []).length;
 
-  const monthScores = monthScoresResult.data ?? [];
-  const monthTestCount = monthScores.length;
+  const allScores = (assessmentScoresResult.data ?? []) as unknown as {
+    score: number;
+    assessments: { date: string };
+  }[];
   const monthAvg =
-    monthScores.length > 0
+    allScores.length > 0
       ? Math.round(
-          (monthScores.reduce(
-            (sum, s) => sum + Number(s.score_percentage),
-            0
-          ) /
-            monthScores.length) *
+          (allScores.reduce((sum, s) => sum + s.score, 0) / allScores.length) *
             10
         ) / 10
       : 0;
 
+  // Today's schedule from attendance
+  const todaySchedule = (todayAttendanceResult.data ?? []) as unknown as {
+    status: string;
+    students: { name: string } | null;
+    subjects: { name: string } | null;
+  }[];
+
+  // Recent assessments with avg scores
+  const recentAssessments = ((recentAssessmentsResult.data ?? []) as unknown as {
+    id: string;
+    name: string;
+    date: string;
+    type: string;
+    subjects: { name: string; color: string } | null;
+    assessment_scores: { score: number | null }[];
+  }[]).map((a) => {
+    const scores = a.assessment_scores
+      .filter((s) => s.score !== null)
+      .map((s) => s.score as number);
+    const avg =
+      scores.length > 0
+        ? Math.round((scores.reduce((x, y) => x + y, 0) / scores.length) * 10) / 10
+        : 0;
+    return {
+      id: a.id,
+      name: a.name,
+      date: a.date,
+      type: a.type,
+      subject: a.subjects?.name ?? "",
+      subjectColor: a.subjects?.color ?? "#6B7280",
+      avg,
+    };
+  });
+
+  // Textbook progress
+  const textbookProgress = ((textbooksResult.data ?? []) as unknown as {
+    id: string;
+    name: string;
+    subjects: { color: string } | null;
+    textbook_chapters: { status: string }[];
+  }[]).map((t) => {
+    const total = t.textbook_chapters.length;
+    const completed = t.textbook_chapters.filter(
+      (ch) => ch.status === "완료"
+    ).length;
+    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return {
+      name: t.name,
+      pct,
+      color: t.subjects?.color ?? "#6B7280",
+    };
+  });
+
   return {
     studentCount,
-    vocabBookCount,
-    monthTestCount,
+    subjectCount,
+    subjectNames,
+    monthAssessmentCount,
     monthAvg,
-    todaySchedules:
-      (todaySchedulesResult.data as unknown as ScheduleItem[]) ?? [],
-    recentScores:
-      (recentScoresResult.data as unknown as RecentScore[]) ?? [],
+    todaySchedule,
+    recentAssessments,
+    textbookProgress,
   };
 }

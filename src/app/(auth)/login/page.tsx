@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { login } from "@/lib/actions/auth";
 import { useState } from "react";
+import { GraduationCap } from "lucide-react";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -22,97 +23,88 @@ export default function LoginPage() {
 
   return (
     <div className="flex w-full min-h-screen">
-      {/* Left - Branding */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-vb-primary p-12">
-        <div className="flex items-center gap-3">
-          <div className="relative bg-white rounded-xl w-14 h-14">
-            <span className="text-vb-primary font-black text-2xl absolute left-2 top-3">
-              VB
-            </span>
-            <div className="absolute bottom-0 left-0 w-full h-[5px] bg-blue-300 rounded-b-xl" />
+      {/* Left - Hero / Branding */}
+      <div className="flex-1 flex flex-col justify-between bg-[#111827] p-12">
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-center w-10 h-10 bg-[#4F46E5] rounded-lg">
+            <GraduationCap className="w-5 h-5 text-white" />
           </div>
-          <span className="text-white font-bold text-[32px]">Voca Box</span>
+          <span className="text-white font-bold text-xl">EduOps</span>
         </div>
-        <p className="text-white/80 text-lg text-center">
-          영어학원 학생 관리의 새로운 기준
-        </p>
-        <p className="text-white/60 text-[15px] text-center leading-relaxed">
-          단어장 관리부터 시험지 출력, 점수 관리까지
-          <br />
-          하나의 플랫폼에서 간편하게
+
+        <div className="flex flex-col gap-5">
+          <h2 className="text-white text-4xl font-bold leading-[1.3] whitespace-pre-line">
+            {"학원 운영의\n모든 것을 하나로"}
+          </h2>
+          <p className="text-[#9CA3AF] text-base leading-relaxed whitespace-pre-line">
+            {"학습 관리, 평가, 분석, 출결까지\n종합학원 ERP 솔루션"}
+          </p>
+        </div>
+
+        <p className="text-[#9CA3AF] text-xs">
+          © 2026 EduOps. All rights reserved.
         </p>
       </div>
 
       {/* Right - Login Form */}
       <div className="flex items-center justify-center w-[520px] bg-white px-[60px] py-12">
-        <form action={handleSubmit} className="flex flex-col gap-6 w-full">
+        <form action={handleSubmit} className="flex flex-col gap-8 w-full">
           <div className="flex flex-col gap-2">
-            <h1 className="text-2xl font-bold text-vb-text-primary">로그인</h1>
-            <p className="text-sm text-vb-text-secondary">
-              계정에 로그인하여 시작하세요
+            <h1 className="text-[28px] font-bold text-[#111827]">로그인</h1>
+            <p className="text-[15px] text-[#6B7280]">
+              학원 계정으로 로그인하세요
             </p>
           </div>
 
           {error && (
-            <div className="p-3 rounded-lg bg-red-50 text-sm text-vb-danger">
+            <div className="p-3 rounded-lg bg-red-50 text-sm text-[#EF4444]">
               {error}
             </div>
           )}
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-vb-text-primary">
-              이메일
-            </label>
-            <Input
-              name="email"
-              type="email"
-              placeholder="name@academy.com"
-              className="h-10"
-              required
-            />
-          </div>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-[#111827]">
+                이메일
+              </label>
+              <Input
+                name="email"
+                type="email"
+                placeholder="name@academy.com"
+                className="h-11"
+                required
+              />
+            </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-vb-text-primary">
-              비밀번호
-            </label>
-            <Input
-              name="password"
-              type="password"
-              placeholder="비밀번호를 입력하세요"
-              className="h-10"
-              required
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-sm text-vb-text-secondary cursor-pointer">
-              <input type="checkbox" className="rounded border-vb-border" />
-              로그인 유지
-            </label>
-            <Link
-              href="#"
-              className="text-[13px] font-medium text-vb-primary hover:underline"
-            >
-              비밀번호 찾기
-            </Link>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-[#111827]">
+                비밀번호
+              </label>
+              <Input
+                name="password"
+                type="password"
+                placeholder="비밀번호를 입력하세요"
+                className="h-11"
+                required
+              />
+            </div>
           </div>
 
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-11 bg-vb-primary hover:bg-vb-primary-hover text-white text-[15px] font-medium"
+            className="w-full h-12 bg-[#4F46E5] hover:bg-[#4338CA] text-white text-[15px] font-semibold rounded-lg"
           >
             {loading ? "로그인 중..." : "로그인"}
           </Button>
 
-          <p className="text-[13px] text-center text-vb-text-secondary">
-            계정이 없으신가요?{" "}
+          <p className="text-[13px] text-center text-[#6B7280]">
+            아직 계정이 없으신가요?{" "}
             <Link
               href="/signup"
-              className="font-semibold text-vb-primary hover:underline"
+              className="font-semibold text-[#4F46E5] hover:underline"
             >
-              회원가입
+              학원 등록하기
             </Link>
           </p>
         </form>

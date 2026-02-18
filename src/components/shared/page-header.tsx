@@ -1,13 +1,19 @@
 interface PageHeaderProps {
   title: string;
+  description?: string;
   children?: React.ReactNode;
 }
 
-export function PageHeader({ title, children }: PageHeaderProps) {
+export function PageHeader({ title, description, children }: PageHeaderProps) {
   return (
-    <div className="flex items-center justify-between h-16 px-8 bg-white border-b border-vb-border">
-      <h1 className="text-xl font-bold text-vb-text-primary">{title}</h1>
-      {children && <div className="flex items-center gap-2">{children}</div>}
+    <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold text-eo-text-primary">{title}</h1>
+        {description && (
+          <p className="text-sm text-eo-text-secondary">{description}</p>
+        )}
+      </div>
+      {children && <div className="flex items-center gap-2.5">{children}</div>}
     </div>
   );
 }

@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Voca Box - 영어학원 관리 시스템",
-  description: "영어학원 단어 시험 및 학생 관리 SaaS",
+  title: "EduOps - 종합학원 관리 시스템",
+  description: "학습 관리, 평가, 분석, 출결까지 종합학원 ERP 솔루션",
 };
 
 export default function RootLayout({

@@ -38,6 +38,11 @@ export async function updateAcademyInfo(formData: FormData) {
     .update({
       name: formData.get("name") as string,
       phone: (formData.get("phone") as string) || null,
+      address: (formData.get("address") as string) || null,
+      operating_hours_start:
+        (formData.get("operating_hours_start") as string) || null,
+      operating_hours_end:
+        (formData.get("operating_hours_end") as string) || null,
     })
     .eq("id", profile.academy_id);
 

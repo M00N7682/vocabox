@@ -1,152 +1,204 @@
-import { Header } from "@/components/layout/header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Search } from "lucide-react";
-import { getStudents } from "@/lib/actions/students";
-import { getClasses } from "@/lib/actions/classes";
-import { AddStudentDialog } from "@/components/students/add-student-dialog";
+import { PageHeader } from "@/components/shared/page-header";
+import { StudentAddButton } from "@/components/students/student-add-button";
 import Link from "next/link";
+import { getStudents } from "@/lib/actions/students";
+import { getSubjects } from "@/lib/actions/subjects";
+import { SearchInput } from "@/components/shared/search-input";
+import { FilterDropdown } from "@/components/shared/filter-dropdown";
+import { Suspense } from "react";
+
+const avatarColors = [
+  { bg: "bg-[#DBEAFE]", text: "text-[#2563EB]" },
+  { bg: "bg-[#FEF3C7]", text: "text-[#92400E]" },
+  { bg: "bg-[#E0E7FF]", text: "text-[#3730A3]" },
+  { bg: "bg-[#FCE7F3]", text: "text-[#9D174D]" },
+  { bg: "bg-[#FEE2E2]", text: "text-[#991B1B]" },
+  { bg: "bg-[#D1FAE5]", text: "text-[#065F46]" },
+];
+
+function getAvatarStyle(name: string) {
+  const idx = name.charCodeAt(0) % avatarColors.length;
+  return avatarColors[idx];
+}
+
+function FiltersRow({
+  subjects,
+  totalCount,
+}: {
+  subjects: { id: string; name: string }[];
+  totalCount: number;
+}) {
+  const subjectOptions = subjects.map((s) => ({ value: s.id, label: s.name }));
+  const statusOptions = [
+    { value: "true", label: "재원" },
+    { value: "false", label: "퇴원" },
+  ];
+
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="w-[280px]">
+        <SearchInput placeholder="학생 이름 검색..." />
+      </div>
+      <FilterDropdown
+        paramKey="subject"
+        label="과목"
+        options={subjectOptions}
+        allLabel="과목: 전체"
+      />
+      <FilterDropdown
+        paramKey="status"
+        label="상태"
+        options={statusOptions}
+        allLabel="상태: 전체"
+      />
+      <span className="text-[13px] font-medium text-eo-text-secondary">
+        총 {totalCount}명
+      </span>
+    </div>
+  );
+}
 
 export default async function StudentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; class?: string; status?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    subject?: string;
+    status?: string;
+  }>;
 }) {
   const params = await searchParams;
-  const [students, classes] = await Promise.all([
+
+  const activeOnly =
+    params.status !== undefined ? params.status === "true" : undefined;
+
+  const [students, subjects] = await Promise.all([
     getStudents({
       search: params.search,
-      classId: params.class,
-      activeOnly: params.status === "inactive" ? false : params.status === "all" ? undefined : true,
+      subjectId: params.subject,
+      activeOnly,
     }),
-    getClasses(),
+    getSubjects(),
   ]);
 
+  // Build a map: student_id -> subject info list
+  const studentSubjects = new Map<string, { name: string; color: string }[]>();
+  for (const sub of subjects) {
+    for (const ss of sub.subject_students ?? []) {
+      if (!studentSubjects.has(ss.student_id)) {
+        studentSubjects.set(ss.student_id, []);
+      }
+      studentSubjects.get(ss.student_id)!.push({
+        name: sub.name,
+        color: sub.color,
+      });
+    }
+  }
+
   return (
-    <>
-      <Header title="학생 관리" />
-      <div className="flex flex-col gap-6 p-8">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between">
-          <form className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-vb-text-tertiary" />
-              <Input
-                name="search"
-                placeholder="학생 검색..."
-                defaultValue={params.search}
-                className="pl-9 h-10 w-[240px]"
-              />
-            </div>
-            <select
-              name="class"
-              defaultValue={params.class}
-              className="h-10 px-3 rounded-lg border border-vb-border bg-white text-sm text-vb-text-secondary"
-            >
-              <option value="">전체 반</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <select
-              name="status"
-              defaultValue={params.status}
-              className="h-10 px-3 rounded-lg border border-vb-border bg-white text-sm text-vb-text-secondary"
-            >
-              <option value="">재원생</option>
-              <option value="inactive">퇴원생</option>
-              <option value="all">전체</option>
-            </select>
-            <Button type="submit" variant="outline" size="sm">
-              검색
-            </Button>
-          </form>
-          <AddStudentDialog />
+    <div className="flex flex-col gap-7 p-10 flex-1 overflow-auto">
+      <PageHeader
+        title="학생 관리"
+        description="학원에 등록된 학생들을 관리합니다"
+      >
+        <StudentAddButton />
+      </PageHeader>
+
+      {/* Filter Row — client components need Suspense */}
+      <Suspense
+        fallback={
+          <div className="h-9 flex items-center text-sm text-eo-text-secondary">
+            필터 로딩 중...
+          </div>
+        }
+      >
+        <FiltersRow subjects={subjects} totalCount={students.length} />
+      </Suspense>
+
+      {/* Student Table */}
+      <div className="bg-white rounded-xl border border-eo-border overflow-hidden">
+        {/* Table Head */}
+        <div className="flex items-center px-5 py-3 bg-eo-bg-surface border-b border-eo-border">
+          <div className="w-[200px] text-xs font-semibold text-eo-text-secondary">
+            이름
+          </div>
+          <div className="flex-1 text-xs font-semibold text-eo-text-secondary">
+            학교/학년
+          </div>
+          <div className="w-[220px] text-xs font-semibold text-eo-text-secondary">
+            수강 과목
+          </div>
+          <div className="w-[80px] text-xs font-semibold text-eo-text-secondary">
+            상태
+          </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-xl border border-vb-border overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-vb-bg-muted">
-                <th className="text-left px-5 py-3 text-[13px] font-semibold text-vb-text-secondary">
-                  이름
-                </th>
-                <th className="text-left px-5 py-3 text-[13px] font-semibold text-vb-text-secondary">
-                  반
-                </th>
-                <th className="text-left px-5 py-3 text-[13px] font-semibold text-vb-text-secondary">
-                  학교/학년
-                </th>
-                <th className="text-left px-5 py-3 text-[13px] font-semibold text-vb-text-secondary">
-                  상태
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {students.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-5 py-8 text-center text-sm text-vb-text-tertiary"
+        {/* Table Body */}
+        {students.map((s, i) => {
+          const avatar = getAvatarStyle(s.name);
+          const subs = studentSubjects.get(s.id) ?? [];
+
+          return (
+            <Link
+              key={s.id}
+              href={`/students/${s.id}`}
+              className={`flex items-center px-5 py-3.5 hover:bg-eo-bg-page/50 transition-colors ${
+                i < students.length - 1 ? "border-b border-eo-border" : ""
+              }`}
+            >
+              <div className="flex items-center gap-2.5 w-[200px]">
+                <div
+                  className={`flex items-center justify-center w-8 h-8 rounded-full ${avatar.bg}`}
+                >
+                  <span className={`text-xs font-semibold ${avatar.text}`}>
+                    {s.name[0]}
+                  </span>
+                </div>
+                <span className="text-sm font-medium text-eo-text-primary">
+                  {s.name}
+                </span>
+              </div>
+              <div className="flex-1 text-[13px] text-eo-text-secondary">
+                {s.school ?? "-"} {s.grade ?? ""}
+              </div>
+              <div className="flex items-center gap-1 flex-wrap w-[220px]">
+                {subs.map((sub) => (
+                  <span
+                    key={sub.name}
+                    className="text-[11px] font-medium px-1.5 py-0.5 rounded"
+                    style={{
+                      backgroundColor: `${sub.color}20`,
+                      color: sub.color,
+                    }}
                   >
-                    등록된 학생이 없습니다.
-                  </td>
-                </tr>
-              ) : (
-                students.map((s) => {
-                  const className = s.class_students
-                    ?.map((cs) => cs.classes?.name)
-                    .filter(Boolean)
-                    .join(", ");
-                  return (
-                    <tr
-                      key={s.id}
-                      className={`border-t border-vb-border hover:bg-vb-bg-muted/50 cursor-pointer ${
-                        !s.is_active ? "opacity-60" : ""
-                      }`}
-                    >
-                      <td className="px-5 py-3.5">
-                        <Link
-                          href={`/students/${s.id}`}
-                          className="text-sm font-medium text-vb-text-primary hover:underline"
-                        >
-                          {s.name}
-                          {s.english_name && (
-                            <span className="text-vb-text-tertiary ml-1">
-                              ({s.english_name})
-                            </span>
-                          )}
-                        </Link>
-                      </td>
-                      <td className="px-5 py-3.5 text-sm text-vb-text-secondary">
-                        {className || "-"}
-                      </td>
-                      <td className="px-5 py-3.5 text-sm text-vb-text-secondary">
-                        {[s.school, s.grade].filter(Boolean).join(" ") || "-"}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        {s.is_active ? (
-                          <Badge className="bg-vb-success-light text-vb-success border-0 text-xs">
-                            재원
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="text-xs">
-                            퇴원
-                          </Badge>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                    {sub.name}
+                  </span>
+                ))}
+                {subs.length === 0 && (
+                  <span className="text-[11px] text-eo-text-secondary">-</span>
+                )}
+              </div>
+              <div className="w-[80px]">
+                <span
+                  className={`text-xs font-semibold px-2 py-1 rounded ${
+                    s.is_active
+                      ? "bg-[#ECFDF5] text-[#10B981]"
+                      : "bg-[#F1F5F9] text-[#6B7280]"
+                  }`}
+                >
+                  {s.is_active ? "재원" : "퇴원"}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
+
+        {students.length === 0 && (
+          <div className="flex items-center justify-center py-12 text-sm text-eo-text-secondary">
+            등록된 학생이 없습니다.
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }

@@ -53,6 +53,13 @@ export async function middleware(request: NextRequest) {
     "/schedule",
     "/reports",
     "/settings",
+    "/subjects",
+    "/textbooks",
+    "/assessments",
+    "/attendance",
+    "/analytics",
+    "/assignments",
+    "/notifications",
   ];
 
   const isProtected = protectedPaths.some(
