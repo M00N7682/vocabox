@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { createAssignmentSchema, updateStudentStatusSchema, formDataToObject, validate } from "@/lib/validations";
 import type { Assignment, AssignmentStudent } from "@/types/database";
 
 export type AssignmentWithDetails = Assignment & {
@@ -71,23 +72,21 @@ export async function createAssignment(formData: FormData) {
 
   if (profileError || !profile) return { error: "프로필을 찾을 수 없습니다." };
 
-  const chapterId = formData.get("chapter_id") as string | null;
-  const isRequiredRaw = formData.get("is_required");
+  const parsed = validate(createAssignmentSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const isRequired =
-    isRequiredRaw === "true" || isRequiredRaw === "1" ? true : false;
+    parsed.data.is_required === "true" || parsed.data.is_required === "1" ? true : false;
 
   const { error } = await supabase.from("assignments").insert({
     academy_id: profile.academy_id,
-    title: formData.get("title") as string,
-    subject_id: formData.get("subject_id") as string,
-    chapter_id: chapterId || null,
-    description: (formData.get("description") as string) || null,
-    due_date: formData.get("due_date") as string,
-    submission_type:
-      (formData.get("submission_type") as "photo" | "file" | "check") ||
-      "check",
-    difficulty:
-      (formData.get("difficulty") as "easy" | "medium" | "hard") || null,
+    title: parsed.data.title,
+    subject_id: parsed.data.subject_id,
+    chapter_id: parsed.data.chapter_id || null,
+    description: parsed.data.description || null,
+    due_date: parsed.data.due_date,
+    submission_type: parsed.data.submission_type || "check",
+    difficulty: parsed.data.difficulty || null,
     is_required: isRequired,
     created_by: profile.id,
   });
@@ -101,39 +100,26 @@ export async function createAssignment(formData: FormData) {
 export async function updateAssignment(id: string, formData: FormData) {
   const supabase = await createClient();
 
-  const chapterId = formData.get("chapter_id") as string | null;
-  const isRequiredRaw = formData.get("is_required");
+  const parsed = validate(createAssignmentSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const isRequired =
-    isRequiredRaw !== null
-      ? isRequiredRaw === "true" || isRequiredRaw === "1"
+    parsed.data.is_required !== undefined
+      ? parsed.data.is_required === "true" || parsed.data.is_required === "1"
       : undefined;
 
   const updatePayload: Record<string, unknown> = {};
 
-  const title = formData.get("title");
-  if (title !== null) updatePayload.title = title as string;
-
-  const subjectId = formData.get("subject_id");
-  if (subjectId !== null) updatePayload.subject_id = subjectId as string;
-
-  updatePayload.chapter_id = chapterId || null;
-
-  const description = formData.get("description");
-  if (description !== null)
-    updatePayload.description = (description as string) || null;
-
-  const dueDate = formData.get("due_date");
-  if (dueDate !== null) updatePayload.due_date = dueDate as string;
-
-  const submissionType = formData.get("submission_type");
-  if (submissionType !== null)
-    updatePayload.submission_type = submissionType as "photo" | "file" | "check";
-
-  const difficulty = formData.get("difficulty");
-  if (difficulty !== null)
-    updatePayload.difficulty =
-      (difficulty as "easy" | "medium" | "hard") || null;
-
+  if (parsed.data.title) updatePayload.title = parsed.data.title;
+  if (parsed.data.subject_id) updatePayload.subject_id = parsed.data.subject_id;
+  updatePayload.chapter_id = parsed.data.chapter_id || null;
+  if (parsed.data.description !== undefined)
+    updatePayload.description = parsed.data.description || null;
+  if (parsed.data.due_date) updatePayload.due_date = parsed.data.due_date;
+  if (parsed.data.submission_type)
+    updatePayload.submission_type = parsed.data.submission_type;
+  if (parsed.data.difficulty !== undefined)
+    updatePayload.difficulty = parsed.data.difficulty || null;
   if (isRequired !== undefined) updatePayload.is_required = isRequired;
 
   const { error } = await supabase
@@ -190,6 +176,9 @@ export async function updateStudentStatus(
     feedback?: string;
   }
 ) {
+  const parsed = validate(updateStudentStatusSchema, data);
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const updatePayload: {

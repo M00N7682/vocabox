@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Subject } from "@/types/database";
+import { subjectSchema, formDataToObject, validate } from "@/lib/validations";
 
 export type SubjectType =
   | "정규"
@@ -88,28 +89,30 @@ export async function createSubject(formData: FormData) {
 
   if (!profile.data) return { error: "프로필을 찾을 수 없습니다." };
 
-  const gradeWeightRaw = formData.get("grade_weight") as string | null;
+  const parsed = validate(subjectSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   let gradeWeight: Record<string, number> | null = null;
-  if (gradeWeightRaw) {
+  if (parsed.data.grade_weight) {
     try {
-      gradeWeight = JSON.parse(gradeWeightRaw);
+      gradeWeight = JSON.parse(parsed.data.grade_weight);
     } catch {
       return { error: "grade_weight 형식이 올바르지 않습니다." };
     }
   }
 
-  const isActiveRaw = formData.get("is_active");
+  const isActiveRaw = parsed.data.is_active;
   const isActive =
-    isActiveRaw === null ? true : isActiveRaw === "true" || isActiveRaw === "1";
+    isActiveRaw === undefined ? true : isActiveRaw === "true" || isActiveRaw === "1";
 
   const { error } = await supabase.from("subjects").insert({
     academy_id: profile.data.academy_id,
-    name: formData.get("name") as string,
-    type: (formData.get("type") as SubjectType) || "정규",
-    color: (formData.get("color") as string) || "#3B82F6",
-    icon: (formData.get("icon") as string) || null,
+    name: parsed.data.name,
+    type: (parsed.data.type as SubjectType) || "정규",
+    color: parsed.data.color || "#3B82F6",
+    icon: parsed.data.icon || null,
     grade_weight: gradeWeight,
-    instructor_id: (formData.get("instructor_id") as string) || null,
+    instructor_id: parsed.data.instructor_id || null,
     is_active: isActive,
   });
 
@@ -122,36 +125,37 @@ export async function createSubject(formData: FormData) {
 export async function updateSubject(id: string, formData: FormData) {
   const supabase = await createClient();
 
-  const gradeWeightRaw = formData.get("grade_weight") as string | null;
+  const parsed = validate(subjectSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   let gradeWeight: Record<string, number> | null | undefined = undefined;
-  if (gradeWeightRaw !== null) {
-    if (gradeWeightRaw === "") {
+  if (parsed.data.grade_weight !== undefined) {
+    if (parsed.data.grade_weight === "") {
       gradeWeight = null;
     } else {
       try {
-        gradeWeight = JSON.parse(gradeWeightRaw);
+        gradeWeight = JSON.parse(parsed.data.grade_weight);
       } catch {
         return { error: "grade_weight 형식이 올바르지 않습니다." };
       }
     }
   }
 
-  const isActiveRaw = formData.get("is_active");
+  const isActiveRaw = parsed.data.is_active;
   const isActive =
-    isActiveRaw === null
+    isActiveRaw === undefined
       ? undefined
       : isActiveRaw === "true" || isActiveRaw === "1";
 
   const updatePayload: Record<string, unknown> = {
-    name: formData.get("name") as string,
-    type: (formData.get("type") as SubjectType) || "정규",
-    color: (formData.get("color") as string) || "#3B82F6",
-    instructor_id: (formData.get("instructor_id") as string) || null,
+    name: parsed.data.name,
+    type: (parsed.data.type as SubjectType) || "정규",
+    color: parsed.data.color || "#3B82F6",
+    instructor_id: parsed.data.instructor_id || null,
   };
 
-  const iconRaw = formData.get("icon");
-  if (iconRaw !== null) {
-    updatePayload.icon = (iconRaw as string) || null;
+  if (parsed.data.icon !== undefined) {
+    updatePayload.icon = parsed.data.icon || null;
   }
 
   if (gradeWeight !== undefined) {

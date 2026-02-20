@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Textbook, TextbookChapter } from "@/types/database";
+import { textbookSchema, chapterSchema, formDataToObject, validate } from "@/lib/validations";
 
 export type TextbookWithSubject = Textbook & {
   subjects: { name: string; color: string } | null;
@@ -86,12 +87,15 @@ export async function createTextbook(formData: FormData) {
 
   if (!profile.data) return { error: "프로필을 찾을 수 없습니다." };
 
+  const parsed = validate(textbookSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const { error } = await supabase.from("textbooks").insert({
     academy_id: profile.data.academy_id,
-    name: formData.get("name") as string,
-    subject_id: formData.get("subject_id") as string,
-    year: Number(formData.get("year")) || new Date().getFullYear(),
-    grade: (formData.get("grade") as string) || null,
+    name: parsed.data.name,
+    subject_id: parsed.data.subject_id,
+    year: parsed.data.year || new Date().getFullYear(),
+    grade: parsed.data.grade || null,
   });
 
   if (error) return { error: error.message };
@@ -103,13 +107,16 @@ export async function createTextbook(formData: FormData) {
 export async function updateTextbook(id: string, formData: FormData) {
   const supabase = await createClient();
 
+  const parsed = validate(textbookSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const { error } = await supabase
     .from("textbooks")
     .update({
-      name: formData.get("name") as string,
-      subject_id: formData.get("subject_id") as string,
-      year: Number(formData.get("year")) || new Date().getFullYear(),
-      grade: (formData.get("grade") as string) || null,
+      name: parsed.data.name,
+      subject_id: parsed.data.subject_id,
+      year: parsed.data.year || new Date().getFullYear(),
+      grade: parsed.data.grade || null,
     })
     .eq("id", id);
 
@@ -133,13 +140,15 @@ export async function deleteTextbook(id: string) {
 export async function createChapter(formData: FormData) {
   const supabase = await createClient();
 
+  const parsed = validate(chapterSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const { error } = await supabase.from("textbook_chapters").insert({
-    textbook_id: formData.get("textbook_id") as string,
-    title: formData.get("title") as string,
-    level:
-      (formData.get("level") as "major" | "middle" | "minor") ?? "major",
-    parent_chapter_id: (formData.get("parent_chapter_id") as string) || null,
-    sort_order: Number(formData.get("sort_order")) || 0,
+    textbook_id: parsed.data.textbook_id,
+    title: parsed.data.title,
+    level: parsed.data.level ?? "major",
+    parent_chapter_id: parsed.data.parent_chapter_id || null,
+    sort_order: parsed.data.sort_order ?? 0,
   });
 
   if (error) return { error: error.message };
@@ -151,15 +160,16 @@ export async function createChapter(formData: FormData) {
 export async function updateChapter(id: string, formData: FormData) {
   const supabase = await createClient();
 
+  const parsed = validate(chapterSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const { error } = await supabase
     .from("textbook_chapters")
     .update({
-      title: formData.get("title") as string,
-      level:
-        (formData.get("level") as "major" | "middle" | "minor") ?? "major",
-      parent_chapter_id:
-        (formData.get("parent_chapter_id") as string) || null,
-      sort_order: Number(formData.get("sort_order")) || 0,
+      title: parsed.data.title,
+      level: parsed.data.level ?? "major",
+      parent_chapter_id: parsed.data.parent_chapter_id || null,
+      sort_order: parsed.data.sort_order ?? 0,
     })
     .eq("id", id);
 

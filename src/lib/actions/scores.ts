@@ -1,8 +1,10 @@
 "use server";
 
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Score } from "@/types/database";
+import { saveScoreSchema, validate } from "@/lib/validations";
 
 export type ScoreWithRelations = Score & {
   students: { name: string } | null;
@@ -74,6 +76,9 @@ export async function saveScore(input: {
   totalCount: number;
   testType: "eng_to_kor" | "kor_to_eng";
 }) {
+  const parsed = validate(saveScoreSchema, input);
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const profile = await supabase
@@ -118,6 +123,9 @@ export async function saveBulkScores(
     testType: "eng_to_kor" | "kor_to_eng";
   }[]
 ) {
+  const parsed = validate(z.array(saveScoreSchema).min(1), scores);
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const profile = await supabase

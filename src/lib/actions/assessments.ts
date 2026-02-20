@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { createAssessmentSchema, assessmentScoreSchema, assessmentTemplateSchema, formDataToObject, validate } from "@/lib/validations";
+import { z } from "zod";
 import type {
   Assessment,
   AssessmentScore,
@@ -141,38 +143,28 @@ export async function createAssessment(formData: FormData) {
 
   if (!profile) return { error: "프로필을 찾을 수 없습니다." };
 
-  const chapterIdsRaw = formData.get("chapter_ids");
-  const chapterIds: string[] = chapterIdsRaw
-    ? JSON.parse(chapterIdsRaw as string)
-    : [];
+  const parsed = validate(createAssessmentSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
 
-  const textbookId = (formData.get("textbook_id") as string) || null;
-  const templateId = (formData.get("template_id") as string) || null;
+  const chapterIds: string[] = parsed.data.chapter_ids
+    ? JSON.parse(parsed.data.chapter_ids)
+    : [];
 
   const { data: assessment, error } = await supabase
     .from("assessments")
     .insert({
       academy_id: profile.academy_id,
-      name: formData.get("name") as string,
-      subject_id: formData.get("subject_id") as string,
-      textbook_id: textbookId || null,
-      template_id: templateId || null,
-      type:
-        (formData.get("type") as
-          | "시험"
-          | "퀴즈"
-          | "과제"
-          | "수행평가"
-          | "출석점수") || "시험",
-      date: formData.get("date") as string,
-      total_points: Number(formData.get("total_points")) || 100,
-      scoring_method:
-        (formData.get("scoring_method") as "score" | "grade" | "check") ||
-        "score",
-      is_public: formData.get("is_public") === "true",
-      weight: Number(formData.get("weight")) || 1,
-      status:
-        (formData.get("status") as "완료" | "진행중" | "예정") || "예정",
+      name: parsed.data.name,
+      subject_id: parsed.data.subject_id,
+      textbook_id: parsed.data.textbook_id || null,
+      template_id: parsed.data.template_id || null,
+      type: parsed.data.type || "시험",
+      date: parsed.data.date,
+      total_points: parsed.data.total_points ?? 100,
+      scoring_method: parsed.data.scoring_method || "score",
+      is_public: parsed.data.is_public === "true",
+      weight: parsed.data.weight ?? 1,
+      status: parsed.data.status || "예정",
       created_by: profile.id,
     })
     .select("id")
@@ -291,7 +283,10 @@ export async function saveAssessmentScores(
     .select("id")
     .single();
 
-  const upsertData = scores.map((s) => ({
+  const parsed = validate(z.array(assessmentScoreSchema).min(1, "점수를 1개 이상 입력하세요."), scores);
+  if (!parsed.success) return { error: parsed.error };
+
+  const upsertData = parsed.data.map((s) => ({
     assessment_id: assessmentId,
     student_id: s.student_id,
     score: s.score ?? null,
@@ -403,30 +398,19 @@ export async function createTemplate(formData: FormData) {
 
   if (!profile) return { error: "프로필을 찾을 수 없습니다." };
 
+  const parsed = validate(assessmentTemplateSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const { error } = await supabase.from("assessment_templates").insert({
     academy_id: profile.academy_id,
-    subject_id: formData.get("subject_id") as string,
-    name: formData.get("name") as string,
-    recurrence:
-      (formData.get("recurrence") as "weekly" | "biweekly" | "monthly") ||
-      "weekly",
-    day_of_week: formData.get("day_of_week")
-      ? Number(formData.get("day_of_week"))
-      : null,
-    assessment_type:
-      (formData.get("assessment_type") as
-        | "시험"
-        | "퀴즈"
-        | "과제"
-        | "수행평가"
-        | "출석점수") || "시험",
-    scoring_method:
-      (formData.get("scoring_method") as "score" | "grade" | "check") ||
-      "score",
-    total_points: formData.get("total_points")
-      ? Number(formData.get("total_points"))
-      : null,
-    is_active: formData.get("is_active") !== "false",
+    subject_id: parsed.data.subject_id,
+    name: parsed.data.name,
+    recurrence: parsed.data.recurrence || "weekly",
+    day_of_week: parsed.data.day_of_week ?? null,
+    assessment_type: parsed.data.assessment_type || "시험",
+    scoring_method: parsed.data.scoring_method || "score",
+    total_points: parsed.data.total_points ?? null,
+    is_active: parsed.data.is_active !== "false",
   });
 
   if (error) return { error: error.message };
@@ -438,33 +422,21 @@ export async function createTemplate(formData: FormData) {
 export async function updateTemplate(id: string, formData: FormData) {
   const supabase = await createClient();
 
+  const parsed = validate(assessmentTemplateSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const updatePayload: Record<string, unknown> = {};
 
-  const name = formData.get("name") as string | null;
-  if (name) updatePayload.name = name;
-
-  const subjectId = formData.get("subject_id") as string | null;
-  if (subjectId) updatePayload.subject_id = subjectId;
-
-  const recurrence = formData.get("recurrence") as string | null;
-  if (recurrence) updatePayload.recurrence = recurrence;
-
-  const dayOfWeek = formData.get("day_of_week");
-  if (dayOfWeek !== null)
-    updatePayload.day_of_week = dayOfWeek ? Number(dayOfWeek) : null;
-
-  const assessmentType = formData.get("assessment_type") as string | null;
-  if (assessmentType) updatePayload.assessment_type = assessmentType;
-
-  const scoringMethod = formData.get("scoring_method") as string | null;
-  if (scoringMethod) updatePayload.scoring_method = scoringMethod;
-
-  const totalPoints = formData.get("total_points");
-  if (totalPoints !== null)
-    updatePayload.total_points = totalPoints ? Number(totalPoints) : null;
-
-  const isActive = formData.get("is_active");
-  if (isActive !== null) updatePayload.is_active = isActive !== "false";
+  if (parsed.data.name) updatePayload.name = parsed.data.name;
+  if (parsed.data.subject_id) updatePayload.subject_id = parsed.data.subject_id;
+  if (parsed.data.recurrence) updatePayload.recurrence = parsed.data.recurrence;
+  if (parsed.data.day_of_week !== undefined)
+    updatePayload.day_of_week = parsed.data.day_of_week ?? null;
+  if (parsed.data.assessment_type) updatePayload.assessment_type = parsed.data.assessment_type;
+  if (parsed.data.scoring_method) updatePayload.scoring_method = parsed.data.scoring_method;
+  if (parsed.data.total_points !== undefined)
+    updatePayload.total_points = parsed.data.total_points ?? null;
+  if (parsed.data.is_active !== undefined) updatePayload.is_active = parsed.data.is_active !== "false";
 
   const { error } = await supabase
     .from("assessment_templates")

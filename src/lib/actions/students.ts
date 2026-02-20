@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Student, Score, Attendance, AssessmentScore } from "@/types/database";
+import { createStudentSchema, updateStudentSchema, formDataToObject, validate } from "@/lib/validations";
 
 // ---------------------------------------------------------------------------
 // Composite types
@@ -306,16 +307,19 @@ export async function createStudent(formData: FormData) {
 
   if (!profile.data) return { error: "프로필을 찾을 수 없습니다." };
 
+  const parsed = validate(createStudentSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const { error } = await supabase.from("students").insert({
     academy_id: profile.data.academy_id,
-    name: formData.get("name") as string,
-    english_name: (formData.get("english_name") as string) || null,
-    phone: (formData.get("phone") as string) || null,
-    parent_phone: (formData.get("parent_phone") as string) || null,
-    school: (formData.get("school") as string) || null,
-    grade: (formData.get("grade") as string) || null,
-    pin_code: (formData.get("pin_code") as string) || null,
-    memo: (formData.get("memo") as string) || null,
+    name: parsed.data.name,
+    english_name: parsed.data.english_name || null,
+    phone: parsed.data.phone || null,
+    parent_phone: parsed.data.parent_phone || null,
+    school: parsed.data.school || null,
+    grade: parsed.data.grade || null,
+    pin_code: parsed.data.pin_code || null,
+    memo: parsed.data.memo || null,
   });
 
   if (error) return { error: error.message };
@@ -331,22 +335,23 @@ export async function createStudent(formData: FormData) {
 export async function updateStudent(id: string, formData: FormData) {
   const supabase = await createClient();
 
-  const pinCodeRaw = formData.get("pin_code");
-  const pinCode =
-    pinCodeRaw !== null && pinCodeRaw !== "" ? (pinCodeRaw as string) : null;
+  const parsed = validate(updateStudentSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
+  const pinCode = parsed.data.pin_code || null;
 
   const { error } = await supabase
     .from("students")
     .update({
-      name: formData.get("name") as string,
-      english_name: (formData.get("english_name") as string) || null,
-      phone: (formData.get("phone") as string) || null,
-      parent_phone: (formData.get("parent_phone") as string) || null,
-      school: (formData.get("school") as string) || null,
-      grade: (formData.get("grade") as string) || null,
+      name: parsed.data.name,
+      english_name: parsed.data.english_name || null,
+      phone: parsed.data.phone || null,
+      parent_phone: parsed.data.parent_phone || null,
+      school: parsed.data.school || null,
+      grade: parsed.data.grade || null,
       pin_code: pinCode,
-      memo: (formData.get("memo") as string) || null,
-      is_active: formData.get("is_active") === "true",
+      memo: parsed.data.memo || null,
+      is_active: parsed.data.is_active === "true",
     })
     .eq("id", id);
 

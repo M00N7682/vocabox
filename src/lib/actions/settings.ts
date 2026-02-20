@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Academy, Profile } from "@/types/database";
+import { academyInfoSchema, formDataToObject, validate } from "@/lib/validations";
 
 export async function getAcademyInfo(): Promise<Academy | null> {
   const supabase = await createClient();
@@ -33,16 +34,17 @@ export async function updateAcademyInfo(formData: FormData) {
 
   if (!profile) return { error: "프로필을 찾을 수 없습니다." };
 
+  const parsed = validate(academyInfoSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const { error } = await supabase
     .from("academies")
     .update({
-      name: formData.get("name") as string,
-      phone: (formData.get("phone") as string) || null,
-      address: (formData.get("address") as string) || null,
-      operating_hours_start:
-        (formData.get("operating_hours_start") as string) || null,
-      operating_hours_end:
-        (formData.get("operating_hours_end") as string) || null,
+      name: parsed.data.name,
+      phone: parsed.data.phone || null,
+      address: parsed.data.address || null,
+      operating_hours_start: parsed.data.operating_hours_start || null,
+      operating_hours_end: parsed.data.operating_hours_end || null,
     })
     .eq("id", profile.academy_id);
 

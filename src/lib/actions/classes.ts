@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Class } from "@/types/database";
+import { classSchema, formDataToObject, validate } from "@/lib/validations";
 
 export type ClassWithStudents = Class & {
   class_students: { student_id: string }[];
@@ -50,10 +51,13 @@ export async function createClass(formData: FormData) {
 
   if (!profile.data) return { error: "프로필을 찾을 수 없습니다." };
 
+  const parsed = validate(classSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const { error } = await supabase.from("classes").insert({
     academy_id: profile.data.academy_id,
-    name: formData.get("name") as string,
-    description: (formData.get("description") as string) || null,
+    name: parsed.data.name,
+    description: parsed.data.description || null,
   });
 
   if (error) return { error: error.message };
@@ -63,13 +67,16 @@ export async function createClass(formData: FormData) {
 }
 
 export async function updateClass(id: string, formData: FormData) {
+  const parsed = validate(classSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const { error } = await supabase
     .from("classes")
     .update({
-      name: formData.get("name") as string,
-      description: (formData.get("description") as string) || null,
+      name: parsed.data.name,
+      description: parsed.data.description || null,
     })
     .eq("id", id);
 

@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { recordAttendanceSchema, updateAttendanceSchema, checkInByPinSchema, validate } from "@/lib/validations";
 import type { Attendance } from "@/types/database";
 
 export type AttendanceStatus = "출석" | "지각" | "결석" | "인정결석";
@@ -90,6 +92,9 @@ export async function recordAttendance(data: {
   check_method?: CheckMethod;
   recorded_by?: string;
 }) {
+  const parsed = validate(recordAttendanceSchema, data);
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const profile = await supabase
@@ -133,6 +138,9 @@ export async function bulkRecordAttendance(
     recorded_by?: string;
   }[]
 ) {
+  const parsed = validate(z.array(recordAttendanceSchema).min(1, "출석 기록을 1개 이상 입력하세요."), records);
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const profile = await supabase
@@ -174,6 +182,9 @@ export async function updateAttendance(
     recorded_by?: string;
   }
 ) {
+  const parsed = validate(updateAttendanceSchema, data);
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -193,6 +204,9 @@ export async function updateAttendance(
  * any student or if the student is not enrolled in the subject.
  */
 export async function checkInByPin(pinCode: string, subjectId: string) {
+  const parsed = validate(checkInByPinSchema, { pinCode, subjectId });
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   // Look up student by pin_code

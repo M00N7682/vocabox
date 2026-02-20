@@ -1,8 +1,10 @@
 "use server";
 
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Schedule } from "@/types/database";
+import { createScheduleSchema, validate } from "@/lib/validations";
 
 export type ScheduleWithRelations = Schedule & {
   students: { name: string } | null;
@@ -51,6 +53,9 @@ export async function createSchedule(input: {
   scheduledDate: string;
   note?: string;
 }) {
+  const parsed = validate(createScheduleSchema, input);
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const profile = await supabase
@@ -112,6 +117,9 @@ export async function bulkCreateSchedules(
     note?: string;
   }[]
 ) {
+  const parsed = validate(z.array(createScheduleSchema).min(1), schedules);
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const profile = await supabase

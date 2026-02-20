@@ -85,8 +85,8 @@ describe("Attendance Actions", () => {
       });
 
       const result = await recordAttendance({
-        student_id: "s1",
-        subject_id: "sub1",
+        student_id: "550e8400-e29b-41d4-a716-446655440000",
+        subject_id: "6ba7b810-9dad-41d4-80b4-00c04fd430c8",
         date: "2025-03-01",
         status: "출석",
       });

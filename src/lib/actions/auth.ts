@@ -2,11 +2,13 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { loginSchema, signupSchema, formDataToObject, validate } from "@/lib/validations";
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const parsed = validate(loginSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+  const { email, password } = parsed.data;
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -19,11 +21,9 @@ export async function login(formData: FormData) {
 
 export async function signup(formData: FormData) {
   const supabase = await createClient();
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const academyName = formData.get("academyName") as string;
-  const ownerName = formData.get("ownerName") as string;
-  const phone = (formData.get("phone") as string) || null;
+  const parsed = validate(signupSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+  const { email, password, academyName, ownerName, phone } = parsed.data;
 
   // 1. Create auth user
   const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -46,7 +46,7 @@ export async function signup(formData: FormData) {
 
   const { data: academy, error: academyError } = await supabase
     .from("academies")
-    .insert({ name: academyName, slug, phone })
+    .insert({ name: academyName, slug, phone: phone || null })
     .select()
     .single();
 

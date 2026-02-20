@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { AcademySettings } from "@/types/database";
+import { academySettingsSchema, formDataToObject, validate } from "@/lib/validations";
 
 export async function getSettings(): Promise<AcademySettings | null> {
   const supabase = await createClient();
@@ -59,20 +60,23 @@ export async function updateSettings(formData: FormData) {
 
   if (!profile) return { error: "프로필을 찾을 수 없습니다." };
 
+  const parsed = validate(academySettingsSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const { error } = await supabase
     .from("academy_settings")
     .update({
-      weak_threshold: Number(formData.get("weak_threshold")),
-      risk_score_threshold: Number(formData.get("risk_score_threshold")),
-      risk_score_count: Number(formData.get("risk_score_count")),
-      risk_absence_rate: Number(formData.get("risk_absence_rate")),
-      risk_missing_count: Number(formData.get("risk_missing_count")),
-      late_threshold_min: Number(formData.get("late_threshold_min")),
-      absent_threshold_min: Number(formData.get("absent_threshold_min")),
-      notify_attendance: formData.get("notify_attendance") === "true",
-      notify_score: formData.get("notify_score") === "true",
-      notify_assignment: formData.get("notify_assignment") === "true",
-      notify_monthly_report: formData.get("notify_monthly_report") === "true",
+      weak_threshold: parsed.data.weak_threshold,
+      risk_score_threshold: parsed.data.risk_score_threshold,
+      risk_score_count: parsed.data.risk_score_count,
+      risk_absence_rate: parsed.data.risk_absence_rate,
+      risk_missing_count: parsed.data.risk_missing_count,
+      late_threshold_min: parsed.data.late_threshold_min,
+      absent_threshold_min: parsed.data.absent_threshold_min,
+      notify_attendance: parsed.data.notify_attendance === "true",
+      notify_score: parsed.data.notify_score === "true",
+      notify_assignment: parsed.data.notify_assignment === "true",
+      notify_monthly_report: parsed.data.notify_monthly_report === "true",
       updated_at: new Date().toISOString(),
     })
     .eq("academy_id", profile.academy_id);

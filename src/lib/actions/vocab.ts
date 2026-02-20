@@ -1,8 +1,10 @@
 "use server";
 
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { VocabBook, VocabWord } from "@/types/database";
+import { vocabBookSchema, vocabWordSchema, formDataToObject, validate } from "@/lib/validations";
 
 export async function getVocabBooks(): Promise<VocabBook[]> {
   const supabase = await createClient();
@@ -52,12 +54,15 @@ export async function createVocabBook(formData: FormData) {
 
   if (!profile.data) return { error: "프로필을 찾을 수 없습니다." };
 
+  const parsed = validate(vocabBookSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const { data, error } = await supabase
     .from("vocab_books")
     .insert({
       academy_id: profile.data.academy_id,
-      title: formData.get("title") as string,
-      description: (formData.get("description") as string) || null,
+      title: parsed.data.title,
+      description: parsed.data.description || null,
       created_by: profile.data.id,
     })
     .select()
@@ -70,13 +75,16 @@ export async function createVocabBook(formData: FormData) {
 }
 
 export async function updateVocabBook(id: string, formData: FormData) {
+  const parsed = validate(vocabBookSchema, formDataToObject(formData));
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const { error } = await supabase
     .from("vocab_books")
     .update({
-      title: formData.get("title") as string,
-      description: (formData.get("description") as string) || null,
+      title: parsed.data.title,
+      description: parsed.data.description || null,
     })
     .eq("id", id);
 
@@ -92,6 +100,9 @@ export async function addWord(
   english: string,
   korean: string
 ) {
+  const parsed = validate(vocabWordSchema, { english, korean });
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const { data: maxWord } = await supabase
@@ -106,8 +117,8 @@ export async function addWord(
 
   const { error } = await supabase.from("vocab_words").insert({
     vocab_book_id: bookId,
-    english,
-    korean,
+    english: parsed.data.english,
+    korean: parsed.data.korean,
     sort_order: nextOrder,
   });
 
@@ -122,11 +133,14 @@ export async function updateWord(
   english: string,
   korean: string
 ) {
+  const parsed = validate(vocabWordSchema, { english, korean });
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const { error } = await supabase
     .from("vocab_words")
-    .update({ english, korean })
+    .update({ english: parsed.data.english, korean: parsed.data.korean })
     .eq("id", wordId);
 
   if (error) return { error: error.message };
@@ -152,9 +166,12 @@ export async function bulkInsertWords(
   bookId: string,
   words: { english: string; korean: string }[]
 ) {
+  const parsed = validate(z.array(vocabWordSchema).min(1, "단어를 1개 이상 입력하세요."), words);
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
-  const rows = words.map((w, i) => ({
+  const rows = parsed.data.map((w, i) => ({
     vocab_book_id: bookId,
     english: w.english,
     korean: w.korean,

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Notification } from "@/types/database";
+import { createNotificationSchema, validate } from "@/lib/validations";
 
 export type NotificationWithStudent = Notification & {
   students: { name: string } | null;
@@ -61,6 +62,9 @@ export async function createNotification(data: {
   title: string;
   message: string;
 }) {
+  const parsed = validate(createNotificationSchema, data);
+  if (!parsed.success) return { error: parsed.error };
+
   const supabase = await createClient();
 
   const { data: profile } = await supabase
@@ -72,11 +76,11 @@ export async function createNotification(data: {
 
   const { error } = await supabase.from("notifications").insert({
     academy_id: profile.academy_id,
-    student_id: data.student_id ?? null,
-    type: data.type,
-    channel: data.channel ?? "in_app",
-    title: data.title,
-    message: data.message,
+    student_id: parsed.data.student_id ?? null,
+    type: parsed.data.type,
+    channel: parsed.data.channel ?? "in_app",
+    title: parsed.data.title,
+    message: parsed.data.message,
   });
 
   if (error) return { error: error.message };

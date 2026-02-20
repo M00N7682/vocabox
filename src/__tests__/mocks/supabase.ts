@@ -1,4 +1,27 @@
-import { vi } from "vitest";
+import { vi, type Mock } from "vitest";
+
+export interface MockQueryBuilder {
+  select: Mock;
+  insert: Mock;
+  update: Mock;
+  delete: Mock;
+  upsert: Mock;
+  eq: Mock;
+  neq: Mock;
+  gte: Mock;
+  lte: Mock;
+  ilike: Mock;
+  or: Mock;
+  order: Mock;
+  limit: Mock;
+  single: Mock;
+  maybeSingle: Mock;
+  then: (
+    resolve: (val: { data: unknown; error: unknown }) => void,
+    reject?: (err: unknown) => void
+  ) => Promise<unknown>;
+  setResult: (data: unknown, error?: unknown) => void;
+}
 
 /**
  * Creates a thenable query builder that chains like the real Supabase client.
@@ -7,12 +30,12 @@ import { vi } from "vitest";
  * The builder is "thenable" so `await builder` resolves to `{ data, error }`.
  * Use `setResult(data, error)` to configure what `await` resolves to.
  */
-function createQueryBuilder() {
+function createQueryBuilder(): MockQueryBuilder {
   let result: { data: unknown; error: unknown } = { data: null, error: null };
 
-  const builder: Record<string, unknown> = {};
+  const builder = {} as MockQueryBuilder;
 
-  const chainMethods = [
+  const chainMethods: (keyof MockQueryBuilder)[] = [
     "select",
     "insert",
     "update",
@@ -29,7 +52,8 @@ function createQueryBuilder() {
   ];
 
   for (const method of chainMethods) {
-    builder[method] = vi.fn(() => builder);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (builder as any)[method] = vi.fn(() => builder);
   }
 
   // Terminal methods
@@ -47,12 +71,8 @@ function createQueryBuilder() {
   // Helper to set the resolved result
   builder.setResult = (data: unknown, error: unknown = null) => {
     result = { data, error };
-    (builder.single as ReturnType<typeof vi.fn>).mockImplementation(() =>
-      Promise.resolve(result)
-    );
-    (builder.maybeSingle as ReturnType<typeof vi.fn>).mockImplementation(() =>
-      Promise.resolve(result)
-    );
+    builder.single.mockImplementation(() => Promise.resolve(result));
+    builder.maybeSingle.mockImplementation(() => Promise.resolve(result));
   };
 
   return builder;
