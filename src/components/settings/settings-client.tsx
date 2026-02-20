@@ -47,7 +47,7 @@ export function SettingsClient({ academy, teachers }: SettingsClientProps) {
   return (
     <div className="flex gap-6 p-8">
       {/* Settings Nav */}
-      <div className="w-[220px] shrink-0 bg-white rounded-xl border border-vb-border py-4">
+      <div className="w-[220px] shrink-0 bg-white rounded-xl border border-eo-border py-4">
         {settingsNav.map((item) => {
           const Icon = item.icon;
           const isActive = item.id === activeTab;
@@ -57,8 +57,8 @@ export function SettingsClient({ academy, teachers }: SettingsClientProps) {
               onClick={() => setActiveTab(item.id)}
               className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors ${
                 isActive
-                  ? "bg-vb-primary-light text-vb-primary font-semibold border-l-[3px] border-vb-primary"
-                  : "text-vb-text-secondary hover:bg-vb-bg-muted"
+                  ? "bg-eo-primary-light text-eo-primary font-semibold border-l-[3px] border-eo-primary"
+                  : "text-eo-text-secondary hover:bg-eo-bg-muted"
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -125,10 +125,10 @@ function AcademyInfoCard({ academy }: { academy: Academy | null }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-vb-border p-6">
+    <div className="bg-white rounded-xl border border-eo-border p-6">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-vb-text-primary">학원 정보</h2>
-        <p className="text-sm text-vb-text-secondary mt-1">
+        <h2 className="text-lg font-semibold text-eo-text-primary">학원 정보</h2>
+        <p className="text-sm text-eo-text-secondary mt-1">
           학원의 기본 정보를 관리합니다.
         </p>
       </div>
@@ -136,7 +136,7 @@ function AcademyInfoCard({ academy }: { academy: Academy | null }) {
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-vb-text-primary">학원명</label>
+          <label className="text-sm font-medium text-eo-text-primary">학원명</label>
           <Input
             value={name}
             onChange={(e) => {
@@ -148,7 +148,7 @@ function AcademyInfoCard({ academy }: { academy: Academy | null }) {
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-vb-text-primary">연락처</label>
+          <label className="text-sm font-medium text-eo-text-primary">연락처</label>
           <Input
             value={phone}
             onChange={(e) => {
@@ -165,8 +165,8 @@ function AcademyInfoCard({ academy }: { academy: Academy | null }) {
         <div
           className={`mb-4 rounded-lg px-4 py-2.5 text-sm ${
             message.type === "success"
-              ? "bg-vb-success-light text-vb-success"
-              : "bg-red-50 text-vb-danger"
+              ? "bg-eo-success-light text-eo-success"
+              : "bg-red-50 text-eo-danger"
           }`}
         >
           {message.text}
@@ -178,7 +178,7 @@ function AcademyInfoCard({ academy }: { academy: Academy | null }) {
           취소
         </Button>
         <Button
-          className="bg-vb-primary hover:bg-vb-primary-hover text-white"
+          className="bg-eo-primary hover:bg-eo-primary-hover text-white"
           onClick={handleSave}
           disabled={isPending || !isDirty}
         >
@@ -210,25 +210,25 @@ function TeacherListCard({ teachers }: { teachers: Profile[] }) {
   }
 
   const colors = [
-    "bg-vb-primary",
-    "bg-vb-success",
-    "bg-vb-warning",
-    "bg-vb-info",
-    "bg-vb-danger",
+    "bg-eo-primary",
+    "bg-eo-success",
+    "bg-eo-warning",
+    "bg-eo-info",
+    "bg-eo-danger",
   ];
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-vb-border p-6">
+      <div className="bg-white rounded-xl border border-eo-border p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-vb-text-primary">강사 관리</h2>
-            <p className="text-sm text-vb-text-secondary mt-1">
+            <h2 className="text-lg font-semibold text-eo-text-primary">강사 관리</h2>
+            <p className="text-sm text-eo-text-secondary mt-1">
               등록된 강사 목록을 관리합니다.
             </p>
           </div>
           <Button
-            className="bg-vb-primary hover:bg-vb-primary-hover text-white gap-2"
+            className="bg-eo-primary hover:bg-eo-primary-hover text-white gap-2"
             onClick={handleAddTeacher}
           >
             <Plus className="w-4 h-4" />
@@ -239,7 +239,7 @@ function TeacherListCard({ teachers }: { teachers: Profile[] }) {
 
         <div className="flex flex-col">
           {teachers.length === 0 ? (
-            <p className="text-sm text-vb-text-tertiary py-4 text-center">
+            <p className="text-sm text-eo-text-tertiary py-4 text-center">
               등록된 강사가 없습니다.
             </p>
           ) : (
@@ -248,7 +248,7 @@ function TeacherListCard({ teachers }: { teachers: Profile[] }) {
               return (
                 <div
                   key={t.id}
-                  className="flex items-center justify-between py-3 border-b border-vb-border last:border-0"
+                  className="flex items-center justify-between py-3 border-b border-eo-border last:border-0"
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -257,26 +257,26 @@ function TeacherListCard({ teachers }: { teachers: Profile[] }) {
                       {t.name[0]}
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-vb-text-primary">
+                      <span className="text-sm font-medium text-eo-text-primary">
                         {t.name}
                       </span>
-                      <span className="text-xs text-vb-text-tertiary">
+                      <span className="text-xs text-eo-text-tertiary">
                         {t.email} · {t.created_at.split("T")[0]} 가입
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Badge className="bg-vb-success-light text-vb-success border-0 text-xs">
+                    <Badge className="bg-eo-success-light text-eo-success border-0 text-xs">
                       {t.role === "admin" ? "관리자" : "강사"}
                     </Badge>
                     <button
-                      className="text-vb-text-tertiary hover:text-vb-text-secondary"
+                      className="text-eo-text-tertiary hover:text-eo-text-secondary"
                       onClick={handleEditTeacher}
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button
-                      className="text-vb-text-tertiary hover:text-vb-danger"
+                      className="text-eo-text-tertiary hover:text-eo-danger"
                       onClick={() => setDeleteTarget(t)}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -305,7 +305,7 @@ function TeacherListCard({ teachers }: { teachers: Profile[] }) {
               취소
             </Button>
             <Button
-              className="bg-vb-danger hover:bg-vb-danger/90 text-white"
+              className="bg-eo-danger hover:bg-eo-danger/90 text-white"
               onClick={handleDeleteConfirm}
             >
               삭제
@@ -323,15 +323,15 @@ function TeacherListCard({ teachers }: { teachers: Profile[] }) {
 
 function PlaceholderCard({ label }: { label: string }) {
   return (
-    <div className="bg-white rounded-xl border border-vb-border p-6">
+    <div className="bg-white rounded-xl border border-eo-border p-6">
       <div className="flex flex-col items-center justify-center py-16">
-        <div className="w-12 h-12 rounded-full bg-vb-bg-muted flex items-center justify-center mb-4">
-          <Bell className="w-6 h-6 text-vb-text-tertiary" />
+        <div className="w-12 h-12 rounded-full bg-eo-bg-muted flex items-center justify-center mb-4">
+          <Bell className="w-6 h-6 text-eo-text-tertiary" />
         </div>
-        <h2 className="text-lg font-semibold text-vb-text-primary mb-1">
+        <h2 className="text-lg font-semibold text-eo-text-primary mb-1">
           {label}
         </h2>
-        <p className="text-sm text-vb-text-tertiary">준비 중입니다.</p>
+        <p className="text-sm text-eo-text-tertiary">준비 중입니다.</p>
       </div>
     </div>
   );

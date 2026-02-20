@@ -62,7 +62,7 @@ export function AddBookDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <Button
-        className="bg-vb-primary hover:bg-vb-primary-hover text-white gap-2"
+        className="bg-eo-primary hover:bg-eo-primary-hover text-white gap-2"
         onClick={() => setOpen(true)}
       >
         <Plus className="w-4 h-4" />
@@ -81,7 +81,7 @@ export function AddBookDialog() {
           <div className="flex flex-col gap-2">
             <label
               htmlFor="add-book-title"
-              className="text-sm font-medium text-vb-text-primary"
+              className="text-sm font-medium text-eo-text-primary"
             >
               이름 <span className="text-red-500">*</span>
             </label>
@@ -97,7 +97,7 @@ export function AddBookDialog() {
           <div className="flex flex-col gap-2">
             <label
               htmlFor="add-book-desc"
-              className="text-sm font-medium text-vb-text-primary"
+              className="text-sm font-medium text-eo-text-primary"
             >
               설명
             </label>
@@ -123,7 +123,7 @@ export function AddBookDialog() {
             </Button>
             <Button
               type="submit"
-              className="bg-vb-primary hover:bg-vb-primary-hover text-white"
+              className="bg-eo-primary hover:bg-eo-primary-hover text-white"
               disabled={loading}
             >
               {loading ? "추가 중..." : "추가"}

@@ -31,10 +31,10 @@ import type { ScheduleWithRelations } from "@/lib/actions/schedules";
 const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
 
 const statusColors: Record<string, string> = {
-  scheduled: "bg-vb-primary",
-  in_progress: "bg-vb-warning",
-  completed: "bg-vb-success",
-  missed: "bg-vb-danger",
+  scheduled: "bg-eo-primary",
+  in_progress: "bg-eo-warning",
+  completed: "bg-eo-success",
+  missed: "bg-eo-danger",
 };
 
 const statusLabels: Record<string, string> = {
@@ -45,10 +45,10 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusBadgeColors: Record<string, string> = {
-  scheduled: "bg-vb-primary/10 text-vb-primary",
-  in_progress: "bg-vb-warning/10 text-vb-warning",
-  completed: "bg-vb-success/10 text-vb-success",
-  missed: "bg-vb-danger/10 text-vb-danger",
+  scheduled: "bg-eo-primary/10 text-eo-primary",
+  in_progress: "bg-eo-warning/10 text-eo-warning",
+  completed: "bg-eo-success/10 text-eo-success",
+  missed: "bg-eo-danger/10 text-eo-danger",
 };
 
 interface ScheduleClientProps {
@@ -242,25 +242,25 @@ export function ScheduleClient({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button
-            className="p-1 hover:bg-vb-bg-muted rounded disabled:opacity-50"
+            className="p-1 hover:bg-eo-bg-muted rounded disabled:opacity-50"
             onClick={() => handleMonthNav(prevMonth)}
             disabled={isPending}
           >
-            <ChevronLeft className="w-5 h-5 text-vb-text-secondary" />
+            <ChevronLeft className="w-5 h-5 text-eo-text-secondary" />
           </button>
-          <h2 className="text-lg font-semibold text-vb-text-primary">
+          <h2 className="text-lg font-semibold text-eo-text-primary">
             {year}년 {mon}월
           </h2>
           <button
-            className="p-1 hover:bg-vb-bg-muted rounded disabled:opacity-50"
+            className="p-1 hover:bg-eo-bg-muted rounded disabled:opacity-50"
             onClick={() => handleMonthNav(nextMonth)}
             disabled={isPending}
           >
-            <ChevronRight className="w-5 h-5 text-vb-text-secondary" />
+            <ChevronRight className="w-5 h-5 text-eo-text-secondary" />
           </button>
         </div>
         <Button
-          className="bg-vb-primary hover:bg-vb-primary-hover text-white gap-2"
+          className="bg-eo-primary hover:bg-eo-primary-hover text-white gap-2"
           onClick={handleOpenAssign}
         >
           <Plus className="w-4 h-4" />
@@ -269,11 +269,11 @@ export function ScheduleClient({
       </div>
 
       {/* Day Headers */}
-      <div className="grid grid-cols-7 border-b border-vb-border">
+      <div className="grid grid-cols-7 border-b border-eo-border">
         {dayNames.map((d) => (
           <div
             key={d}
-            className="py-2 text-center text-[13px] font-medium text-vb-text-tertiary"
+            className="py-2 text-center text-[13px] font-medium text-eo-text-tertiary"
           >
             {d}
           </div>
@@ -290,8 +290,8 @@ export function ScheduleClient({
           return (
             <div
               key={i}
-              className={`min-h-[100px] p-2 border-b border-r border-vb-border cursor-pointer hover:bg-vb-bg-muted/50 ${
-                isToday ? "bg-vb-primary-light border-vb-primary" : ""
+              className={`min-h-[100px] p-2 border-b border-r border-eo-border cursor-pointer hover:bg-eo-bg-muted/50 ${
+                isToday ? "bg-eo-primary-light border-eo-primary" : ""
               }`}
               onClick={() => day && handleDayClick(day)}
             >
@@ -300,10 +300,10 @@ export function ScheduleClient({
                   <span
                     className={`text-sm ${
                       isToday
-                        ? "font-bold text-vb-primary"
+                        ? "font-bold text-eo-primary"
                         : isWeekend
-                          ? "text-vb-text-secondary"
-                          : "text-vb-text-primary"
+                          ? "text-eo-text-secondary"
+                          : "text-eo-text-primary"
                     }`}
                   >
                     {day}
@@ -313,7 +313,7 @@ export function ScheduleClient({
                       {daySchedules.map((s) => (
                         <div
                           key={s.id}
-                          className={`w-2 h-2 rounded-full ${statusColors[s.status] ?? "bg-vb-primary"}`}
+                          className={`w-2 h-2 rounded-full ${statusColors[s.status] ?? "bg-eo-primary"}`}
                         />
                       ))}
                     </div>
@@ -338,7 +338,7 @@ export function ScheduleClient({
           <div className="space-y-4 py-2">
             {/* Student Select */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-vb-text-primary">
+              <label className="text-sm font-medium text-eo-text-primary">
                 학생
               </label>
               <Select
@@ -360,7 +360,7 @@ export function ScheduleClient({
 
             {/* Book Select */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-vb-text-primary">
+              <label className="text-sm font-medium text-eo-text-primary">
                 단어장
               </label>
               <Select value={selectedBookId} onValueChange={setSelectedBookId}>
@@ -379,7 +379,7 @@ export function ScheduleClient({
 
             {/* Date Picker */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-vb-text-primary">
+              <label className="text-sm font-medium text-eo-text-primary">
                 날짜
               </label>
               <Input
@@ -391,7 +391,7 @@ export function ScheduleClient({
 
             {/* Note */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-vb-text-primary">
+              <label className="text-sm font-medium text-eo-text-primary">
                 메모 (선택)
               </label>
               <textarea
@@ -403,7 +403,7 @@ export function ScheduleClient({
             </div>
 
             {assignError && (
-              <p className="text-sm text-vb-danger">{assignError}</p>
+              <p className="text-sm text-eo-danger">{assignError}</p>
             )}
           </div>
 
@@ -416,7 +416,7 @@ export function ScheduleClient({
               취소
             </Button>
             <Button
-              className="bg-vb-primary hover:bg-vb-primary-hover text-white"
+              className="bg-eo-primary hover:bg-eo-primary-hover text-white"
               onClick={handleAssignSubmit}
               disabled={isSubmitting}
             >
@@ -440,24 +440,24 @@ export function ScheduleClient({
 
           <div className="space-y-3 py-2 max-h-[400px] overflow-y-auto">
             {selectedDaySchedules.length === 0 ? (
-              <p className="text-sm text-vb-text-tertiary text-center py-4">
+              <p className="text-sm text-eo-text-tertiary text-center py-4">
                 스케줄이 없습니다.
               </p>
             ) : (
               selectedDaySchedules.map((schedule) => (
                 <div
                   key={schedule.id}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-vb-border p-3"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-eo-border p-3"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-vb-text-primary truncate">
+                    <p className="text-sm font-medium text-eo-text-primary truncate">
                       {schedule.students?.name ?? "알 수 없음"}
                     </p>
-                    <p className="text-xs text-vb-text-secondary truncate">
+                    <p className="text-xs text-eo-text-secondary truncate">
                       {schedule.vocab_books?.title ?? "알 수 없음"}
                     </p>
                     {schedule.note && (
-                      <p className="text-xs text-vb-text-tertiary mt-1 truncate">
+                      <p className="text-xs text-eo-text-tertiary mt-1 truncate">
                         {schedule.note}
                       </p>
                     )}
@@ -479,7 +479,7 @@ export function ScheduleClient({
                       }
                     >
                       <SelectTrigger
-                        className={`h-7 text-xs px-2 border-0 shadow-none rounded-full ${statusBadgeColors[schedule.status] ?? "bg-vb-primary/10 text-vb-primary"}`}
+                        className={`h-7 text-xs px-2 border-0 shadow-none rounded-full ${statusBadgeColors[schedule.status] ?? "bg-eo-primary/10 text-eo-primary"}`}
                       >
                         <SelectValue />
                       </SelectTrigger>
@@ -495,7 +495,7 @@ export function ScheduleClient({
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      className="text-vb-text-tertiary hover:text-vb-danger"
+                      className="text-eo-text-tertiary hover:text-eo-danger"
                       onClick={() => handleDelete(schedule.id)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />

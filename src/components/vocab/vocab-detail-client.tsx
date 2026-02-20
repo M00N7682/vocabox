@@ -183,17 +183,17 @@ export function VocabDetailClient({ book, words }: VocabDetailClientProps) {
             </Button>
           </Link>
           <div className="flex flex-col gap-0.5">
-            <h2 className="text-lg font-semibold text-vb-text-primary">
+            <h2 className="text-lg font-semibold text-eo-text-primary">
               {book.title}
             </h2>
-            <span className="text-[13px] text-vb-text-secondary">
+            <span className="text-[13px] text-eo-text-secondary">
               총 {book.word_count}개 단어
             </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Button
-            className="bg-vb-primary hover:bg-vb-primary-hover text-white gap-2 text-[13px] h-9"
+            className="bg-eo-primary hover:bg-eo-primary-hover text-white gap-2 text-[13px] h-9"
             onClick={() => {
               setAddWordError(null);
               setAddWordOpen(true);
@@ -218,20 +218,20 @@ export function VocabDetailClient({ book, words }: VocabDetailClientProps) {
       </div>
 
       {/* Word Table */}
-      <div className="bg-white rounded-xl border border-vb-border overflow-hidden">
+      <div className="bg-white rounded-xl border border-eo-border overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="bg-vb-bg-muted">
-              <th className="text-left px-5 py-3 text-[13px] font-semibold text-vb-text-secondary w-[50px]">
+            <tr className="bg-eo-bg-muted">
+              <th className="text-left px-5 py-3 text-[13px] font-semibold text-eo-text-secondary w-[50px]">
                 #
               </th>
-              <th className="text-left px-5 py-3 text-[13px] font-semibold text-vb-text-secondary">
+              <th className="text-left px-5 py-3 text-[13px] font-semibold text-eo-text-secondary">
                 영어
               </th>
-              <th className="text-left px-5 py-3 text-[13px] font-semibold text-vb-text-secondary">
+              <th className="text-left px-5 py-3 text-[13px] font-semibold text-eo-text-secondary">
                 한글
               </th>
-              <th className="text-right px-5 py-3 text-[13px] font-semibold text-vb-text-secondary w-[80px]">
+              <th className="text-right px-5 py-3 text-[13px] font-semibold text-eo-text-secondary w-[80px]">
                 액션
               </th>
             </tr>
@@ -241,33 +241,33 @@ export function VocabDetailClient({ book, words }: VocabDetailClientProps) {
               <tr>
                 <td
                   colSpan={4}
-                  className="px-5 py-8 text-center text-sm text-vb-text-tertiary"
+                  className="px-5 py-8 text-center text-sm text-eo-text-tertiary"
                 >
                   등록된 단어가 없습니다.
                 </td>
               </tr>
             ) : (
               words.map((w) => (
-                <tr key={w.id} className="border-t border-vb-border">
-                  <td className="px-5 py-3 text-sm text-vb-text-tertiary">
+                <tr key={w.id} className="border-t border-eo-border">
+                  <td className="px-5 py-3 text-sm text-eo-text-tertiary">
                     {w.sort_order}
                   </td>
-                  <td className="px-5 py-3 text-sm font-medium text-vb-text-primary">
+                  <td className="px-5 py-3 text-sm font-medium text-eo-text-primary">
                     {w.english}
                   </td>
-                  <td className="px-5 py-3 text-sm text-vb-text-secondary">
+                  <td className="px-5 py-3 text-sm text-eo-text-secondary">
                     {w.korean}
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        className="text-vb-text-tertiary hover:text-vb-text-secondary"
+                        className="text-eo-text-tertiary hover:text-eo-text-secondary"
                         onClick={() => openEditWord(w)}
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
-                        className="text-vb-text-tertiary hover:text-vb-danger disabled:opacity-50"
+                        className="text-eo-text-tertiary hover:text-eo-danger disabled:opacity-50"
                         onClick={() => handleDeleteWord(w)}
                         disabled={deletingWordId === w.id}
                       >
@@ -296,7 +296,7 @@ export function VocabDetailClient({ book, words }: VocabDetailClientProps) {
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="add-word-english"
-                className="text-sm font-medium text-vb-text-primary"
+                className="text-sm font-medium text-eo-text-primary"
               >
                 영어 <span className="text-red-500">*</span>
               </label>
@@ -312,7 +312,7 @@ export function VocabDetailClient({ book, words }: VocabDetailClientProps) {
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="add-word-korean"
-                className="text-sm font-medium text-vb-text-primary"
+                className="text-sm font-medium text-eo-text-primary"
               >
                 한글 <span className="text-red-500">*</span>
               </label>
@@ -339,7 +339,7 @@ export function VocabDetailClient({ book, words }: VocabDetailClientProps) {
               </Button>
               <Button
                 type="submit"
-                className="bg-vb-primary hover:bg-vb-primary-hover text-white"
+                className="bg-eo-primary hover:bg-eo-primary-hover text-white"
                 disabled={addWordLoading}
               >
                 {addWordLoading ? "추가 중..." : "추가"}
@@ -363,7 +363,7 @@ export function VocabDetailClient({ book, words }: VocabDetailClientProps) {
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="edit-book-title"
-                className="text-sm font-medium text-vb-text-primary"
+                className="text-sm font-medium text-eo-text-primary"
               >
                 이름 <span className="text-red-500">*</span>
               </label>
@@ -380,7 +380,7 @@ export function VocabDetailClient({ book, words }: VocabDetailClientProps) {
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="edit-book-desc"
-                className="text-sm font-medium text-vb-text-primary"
+                className="text-sm font-medium text-eo-text-primary"
               >
                 설명
               </label>
@@ -407,7 +407,7 @@ export function VocabDetailClient({ book, words }: VocabDetailClientProps) {
               </Button>
               <Button
                 type="submit"
-                className="bg-vb-primary hover:bg-vb-primary-hover text-white"
+                className="bg-eo-primary hover:bg-eo-primary-hover text-white"
                 disabled={editBookLoading}
               >
                 {editBookLoading ? "저장 중..." : "저장"}
@@ -438,7 +438,7 @@ export function VocabDetailClient({ book, words }: VocabDetailClientProps) {
               <div className="flex flex-col gap-2">
                 <label
                   htmlFor="edit-word-english"
-                  className="text-sm font-medium text-vb-text-primary"
+                  className="text-sm font-medium text-eo-text-primary"
                 >
                   영어 <span className="text-red-500">*</span>
                 </label>
@@ -455,7 +455,7 @@ export function VocabDetailClient({ book, words }: VocabDetailClientProps) {
               <div className="flex flex-col gap-2">
                 <label
                   htmlFor="edit-word-korean"
-                  className="text-sm font-medium text-vb-text-primary"
+                  className="text-sm font-medium text-eo-text-primary"
                 >
                   한글 <span className="text-red-500">*</span>
                 </label>
@@ -483,7 +483,7 @@ export function VocabDetailClient({ book, words }: VocabDetailClientProps) {
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-vb-primary hover:bg-vb-primary-hover text-white"
+                  className="bg-eo-primary hover:bg-eo-primary-hover text-white"
                   disabled={editWordLoading}
                 >
                   {editWordLoading ? "저장 중..." : "저장"}

@@ -76,11 +76,11 @@ export default async function ReportsPage() {
     .slice(0, 5);
 
   const barColors = [
-    "bg-vb-primary",
-    "bg-vb-success",
-    "bg-vb-warning",
-    "bg-vb-info",
-    "bg-vb-danger",
+    "bg-eo-primary",
+    "bg-eo-success",
+    "bg-eo-warning",
+    "bg-eo-info",
+    "bg-eo-danger",
   ];
 
   return (
@@ -114,13 +114,13 @@ export default async function ReportsPage() {
         {/* Bottom Row */}
         <div className="flex gap-6">
           {/* Chart Card */}
-          <div className="flex-1 bg-white rounded-xl border border-vb-border p-6">
-            <h2 className="text-base font-semibold text-vb-text-primary mb-4">
+          <div className="flex-1 bg-white rounded-xl border border-eo-border p-6">
+            <h2 className="text-base font-semibold text-eo-text-primary mb-4">
               반별 평균 점수
             </h2>
-            <div className="bg-vb-bg-muted rounded-lg p-6">
+            <div className="bg-eo-bg-muted rounded-lg p-6">
               {classAverages.length === 0 ? (
-                <p className="text-sm text-vb-text-tertiary text-center py-8">
+                <p className="text-sm text-eo-text-tertiary text-center py-8">
                   데이터가 없습니다.
                 </p>
               ) : (
@@ -130,7 +130,7 @@ export default async function ReportsPage() {
                       key={bar.name}
                       className="flex flex-col items-center gap-2"
                     >
-                      <span className="text-xs font-semibold text-vb-text-primary">
+                      <span className="text-xs font-semibold text-eo-text-primary">
                         {bar.avg > 0 ? `${bar.avg}%` : "-"}
                       </span>
                       <div
@@ -142,7 +142,7 @@ export default async function ReportsPage() {
                               : "4px",
                         }}
                       />
-                      <span className="text-xs text-vb-text-secondary">
+                      <span className="text-xs text-eo-text-secondary">
                         {bar.name}
                       </span>
                     </div>
@@ -153,38 +153,38 @@ export default async function ReportsPage() {
           </div>
 
           {/* Rankings Card */}
-          <div className="w-[360px] shrink-0 bg-white rounded-xl border border-vb-border p-6">
-            <h2 className="text-base font-semibold text-vb-text-primary mb-4">
+          <div className="w-[360px] shrink-0 bg-white rounded-xl border border-eo-border p-6">
+            <h2 className="text-base font-semibold text-eo-text-primary mb-4">
               학생 성적 순위 (상위 5명)
             </h2>
             <div className="flex flex-col">
               {rankings.length === 0 ? (
-                <p className="text-sm text-vb-text-tertiary text-center py-8">
+                <p className="text-sm text-eo-text-tertiary text-center py-8">
                   데이터가 없습니다.
                 </p>
               ) : (
                 rankings.map((r, i) => (
                   <div
                     key={r.name}
-                    className="flex items-center justify-between py-3 border-b border-vb-border last:border-0"
+                    className="flex items-center justify-between py-3 border-b border-eo-border last:border-0"
                   >
                     <div className="flex items-center gap-3">
                       <span
                         className={`text-sm font-bold ${
                           i === 0
-                            ? "text-vb-primary"
-                            : "text-vb-text-secondary"
+                            ? "text-eo-primary"
+                            : "text-eo-text-secondary"
                         }`}
                       >
                         {i + 1}
                       </span>
-                      <span className="text-sm font-medium text-vb-text-primary">
+                      <span className="text-sm font-medium text-eo-text-primary">
                         {r.name}
                       </span>
                     </div>
                     <span
                       className={`text-sm font-bold ${
-                        i === 0 ? "text-vb-primary" : "text-vb-text-primary"
+                        i === 0 ? "text-eo-primary" : "text-eo-text-primary"
                       }`}
                     >
                       {r.avg}점

@@ -29,7 +29,7 @@ export default async function SchedulePage({
     <>
       <Header title="스케줄 관리" />
       <div className="p-8 flex-1">
-        <div className="bg-white rounded-xl border border-vb-border p-6 h-full">
+        <div className="bg-white rounded-xl border border-eo-border p-6 h-full">
           <ScheduleClient
             schedules={schedules}
             month={month}

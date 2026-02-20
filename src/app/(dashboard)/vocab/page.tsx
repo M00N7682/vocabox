@@ -13,7 +13,7 @@ export default async function VocabPage() {
       <div className="flex flex-col gap-6 p-8">
         {/* Toolbar */}
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-vb-text-primary">
+          <h2 className="text-base font-semibold text-eo-text-primary">
             전체 단어장
           </h2>
           <AddBookDialog />
@@ -21,8 +21,8 @@ export default async function VocabPage() {
 
         {/* Card Grid */}
         {books.length === 0 ? (
-          <div className="bg-white rounded-xl border border-vb-border p-12 text-center">
-            <p className="text-sm text-vb-text-tertiary">
+          <div className="bg-white rounded-xl border border-eo-border p-12 text-center">
+            <p className="text-sm text-eo-text-tertiary">
               등록된 단어장이 없습니다. 단어장을 추가해주세요.
             </p>
           </div>
@@ -30,19 +30,19 @@ export default async function VocabPage() {
           <div className="grid grid-cols-3 gap-5">
             {books.map((book) => (
               <Link key={book.id} href={`/vocab/${book.id}`}>
-                <div className="bg-white rounded-xl border border-vb-border p-6 cursor-pointer hover:shadow-sm transition-shadow">
+                <div className="bg-white rounded-xl border border-eo-border p-6 cursor-pointer hover:shadow-sm transition-shadow">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-base font-semibold text-vb-text-primary">
+                    <h3 className="text-base font-semibold text-eo-text-primary">
                       {book.title}
                     </h3>
-                    <Badge className="bg-vb-info-light text-vb-info border-0 text-xs">
+                    <Badge className="bg-eo-info-light text-eo-info border-0 text-xs">
                       {book.word_count}단어
                     </Badge>
                   </div>
-                  <p className="text-sm text-vb-text-secondary mb-4">
+                  <p className="text-sm text-eo-text-secondary mb-4">
                     {book.description || "설명 없음"}
                   </p>
-                  <span className="text-xs text-vb-text-tertiary">
+                  <span className="text-xs text-eo-text-tertiary">
                     등록일: {book.created_at.split("T")[0]}
                   </span>
                 </div>

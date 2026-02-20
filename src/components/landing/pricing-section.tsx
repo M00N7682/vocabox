@@ -48,7 +48,7 @@ const plans = [
       "맞춤 교육",
     ],
     cta: "문의하기",
-    href: "/signup",
+    href: "mailto:contact@eduops.kr",
     highlighted: false,
   },
 ];

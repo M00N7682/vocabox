@@ -456,11 +456,92 @@ export default async function StudentDetailPage({
           )}
 
           {/* ── 분석 tab ── */}
-          {activeTab === "analytics" && (
-            <div className="flex items-center justify-center flex-1 py-20 text-sm text-eo-text-secondary">
-              분석 데이터를 준비중입니다.
-            </div>
-          )}
+          {activeTab === "analytics" && (() => {
+            const totalAttendance = attendance.length;
+            const presentCount = attendance.filter((a) => a.status === "출석").length;
+            const lateCount = attendance.filter((a) => a.status === "지각").length;
+            const excusedCount = attendance.filter((a) => a.status === "인정결석").length;
+            const attendanceRate = totalAttendance > 0
+              ? Math.round(((presentCount + lateCount + excusedCount) / totalAttendance) * 1000) / 10
+              : 0;
+            const totalAssignments = assignments.length;
+            const submittedAssignments = assignments.filter((a) => a.status === "submitted").length;
+            const submissionRate = totalAssignments > 0
+              ? Math.round((submittedAssignments / totalAssignments) * 1000) / 10
+              : 0;
+            const recentScores = assessmentScores.slice(0, 5);
+            const scoreTrend = recentScores
+              .filter((s) => s.score !== null)
+              .map((s) => ({
+                name: s.assessments?.name ?? "-",
+                score: s.score as number,
+                total: s.assessments?.total_points ?? 100,
+              }));
+
+            return (
+              <div className="flex flex-col gap-6">
+                <span className="text-base font-bold text-eo-text-primary">
+                  학습 분석 요약
+                </span>
+
+                {/* Summary Cards */}
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    { label: "평균 점수", value: avg > 0 ? `${avg}점` : "-", color: "bg-[#EEF2FF] text-[#4F46E5]" },
+                    { label: "출석률", value: `${attendanceRate}%`, color: attendanceRate >= 80 ? "bg-[#ECFDF5] text-[#10B981]" : "bg-[#FEF2F2] text-[#EF4444]" },
+                    { label: "과제 제출률", value: `${submissionRate}%`, color: submissionRate >= 70 ? "bg-[#ECFDF5] text-[#10B981]" : "bg-[#FFFBEB] text-[#F59E0B]" },
+                  ].map((card) => (
+                    <div key={card.label} className="flex flex-col items-center gap-2 p-5 bg-white rounded-xl border border-eo-border">
+                      <span className="text-xs text-eo-text-secondary">{card.label}</span>
+                      <span className={`text-2xl font-bold px-3 py-1 rounded-lg ${card.color}`}>{card.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Score Trend */}
+                <div className="bg-white rounded-xl border border-eo-border p-5">
+                  <span className="text-[13px] font-semibold text-eo-text-primary">최근 성적 추이</span>
+                  {scoreTrend.length > 0 ? (
+                    <div className="flex items-end gap-3 mt-4 h-[120px]">
+                      {scoreTrend.map((s, i) => {
+                        const pct = s.total > 0 ? (s.score / s.total) * 100 : 0;
+                        return (
+                          <div key={i} className="flex flex-col items-center gap-1 flex-1">
+                            <span className="text-xs font-semibold text-eo-text-primary">{Math.round(pct)}%</span>
+                            <div
+                              className={`w-full rounded-t ${pct >= 80 ? "bg-eo-success" : pct >= 60 ? "bg-eo-warning" : "bg-eo-danger"}`}
+                              style={{ height: `${Math.max(pct, 4)}px` }}
+                            />
+                            <span className="text-[10px] text-eo-text-tertiary truncate w-full text-center">{s.name}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-eo-text-secondary mt-3">성적 데이터가 없습니다.</p>
+                  )}
+                </div>
+
+                {/* Attendance Breakdown */}
+                <div className="bg-white rounded-xl border border-eo-border p-5">
+                  <span className="text-[13px] font-semibold text-eo-text-primary">출결 현황</span>
+                  <div className="flex gap-4 mt-3">
+                    {[
+                      { label: "출석", count: presentCount, cls: "text-[#10B981]" },
+                      { label: "지각", count: lateCount, cls: "text-[#F59E0B]" },
+                      { label: "결석", count: absentCount, cls: "text-[#EF4444]" },
+                      { label: "인정결석", count: excusedCount, cls: "text-[#3B82F6]" },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center gap-2">
+                        <span className={`text-lg font-bold ${item.cls}`}>{item.count}</span>
+                        <span className="text-xs text-eo-text-secondary">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ── 정보 tab ── */}
           {activeTab === "info" && (
