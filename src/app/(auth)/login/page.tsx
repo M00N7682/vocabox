@@ -5,10 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { login } from "@/lib/actions/auth";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { GraduationCap } from "lucide-react";
 
 export default function LoginPage() {
-  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const callbackError = searchParams.get("error");
+  const [error, setError] = useState<string | null>(callbackError);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(formData: FormData) {
@@ -77,9 +80,17 @@ export default function LoginPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-[#111827]">
-                비밀번호
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-[#111827]">
+                  비밀번호
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-[#4F46E5] hover:underline"
+                >
+                  비밀번호 찾기
+                </Link>
+              </div>
               <Input
                 name="password"
                 type="password"

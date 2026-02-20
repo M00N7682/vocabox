@@ -2,7 +2,9 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { loginSchema, signupSchema, formDataToObject, validate } from "@/lib/validations";
+import { z } from "zod";
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
@@ -25,10 +27,16 @@ export async function signup(formData: FormData) {
   if (!parsed.success) return { error: parsed.error };
   const { email, password, academyName, ownerName, phone } = parsed.data;
 
-  // 1. Create auth user
+  const headersList = await headers();
+  const origin = headersList.get("origin") || "";
+
+  // 1. Create auth user with email redirect
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      emailRedirectTo: `${origin}/auth/callback`,
+    },
   });
 
   if (authError || !authData.user) {
@@ -98,4 +106,49 @@ export async function getProfile() {
     .single();
 
   return data;
+}
+
+export async function resetPassword(formData: FormData) {
+  const parsed = validate(
+    z.object({ email: z.string().email("올바른 이메일 형식이 아닙니다.") }),
+    formDataToObject(formData)
+  );
+  if (!parsed.success) return { error: parsed.error };
+
+  const supabase = await createClient();
+  const headersList = await headers();
+  const origin = headersList.get("origin") || "";
+
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    parsed.data.email,
+    { redirectTo: `${origin}/auth/callback?next=/reset-password` }
+  );
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true };
+}
+
+export async function updatePassword(formData: FormData) {
+  const parsed = validate(
+    z.object({
+      password: z.string().min(6, "비밀번호는 6자 이상이어야 합니다."),
+    }),
+    formDataToObject(formData)
+  );
+  if (!parsed.success) return { error: parsed.error };
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true };
 }
