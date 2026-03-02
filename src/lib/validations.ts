@@ -203,6 +203,7 @@ export const textbookSchema = z.object({
   subject_id: uuid,
   year: z.coerce.number().int().min(2000).max(2100).optional(),
   grade: optionalString,
+  pdf_url: optionalString,
 });
 
 export const chapterSchema = z.object({

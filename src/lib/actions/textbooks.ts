@@ -96,6 +96,7 @@ export async function createTextbook(formData: FormData) {
     subject_id: parsed.data.subject_id,
     year: parsed.data.year || new Date().getFullYear(),
     grade: parsed.data.grade || null,
+    pdf_url: parsed.data.pdf_url || null,
   });
 
   if (error) return { error: error.message };
@@ -117,6 +118,7 @@ export async function updateTextbook(id: string, formData: FormData) {
       subject_id: parsed.data.subject_id,
       year: parsed.data.year || new Date().getFullYear(),
       grade: parsed.data.grade || null,
+      pdf_url: parsed.data.pdf_url || null,
     })
     .eq("id", id);
 
@@ -129,12 +131,37 @@ export async function updateTextbook(id: string, formData: FormData) {
 export async function deleteTextbook(id: string) {
   const supabase = await createClient();
 
+  // Fetch the textbook to get pdf_url before deleting
+  const { data: textbook } = await supabase
+    .from("textbooks")
+    .select("pdf_url")
+    .eq("id", id)
+    .single();
+
+  // Delete the storage file if it exists
+  if (textbook?.pdf_url) {
+    await supabase.storage.from("textbook-pdfs").remove([textbook.pdf_url]);
+  }
+
   const { error } = await supabase.from("textbooks").delete().eq("id", id);
 
   if (error) return { error: error.message };
 
   revalidatePath("/textbooks");
   return { success: true };
+}
+
+export async function getTextbookPdfUrl(
+  storagePath: string
+): Promise<{ url: string } | { error: string }> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.storage
+    .from("textbook-pdfs")
+    .createSignedUrl(storagePath, 3600); // 1 hour expiry
+
+  if (error) return { error: error.message };
+  return { url: data.signedUrl };
 }
 
 export async function createChapter(formData: FormData) {

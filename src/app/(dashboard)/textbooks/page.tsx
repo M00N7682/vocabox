@@ -3,9 +3,16 @@ import { getTextbooks, getTextbookChapters } from "@/lib/actions/textbooks";
 import { getSubjects } from "@/lib/actions/subjects";
 import { TextbooksClient } from "@/components/textbooks/textbooks-client";
 import { TextbookAddButton } from "@/components/textbooks/textbook-add-button";
+import { createClient } from "@/lib/supabase/server";
 import type { ChapterWithChildren } from "@/lib/actions/textbooks";
 
 export default async function TextbooksPage() {
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("academy_id")
+    .single();
+
   const [textbooks, subjects] = await Promise.all([
     getTextbooks(),
     getSubjects({ isActive: true }),
@@ -25,6 +32,7 @@ export default async function TextbooksPage() {
       <PageHeader title="교재/단원 관리" description="교재별 단원 구성과 진도를 관리합니다">
         <TextbookAddButton
           subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
+          academyId={profile?.academy_id ?? ""}
         />
       </PageHeader>
 

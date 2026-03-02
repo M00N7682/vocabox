@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Search, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createChapter } from "@/lib/actions/textbooks";
+import { createChapter, getTextbookPdfUrl } from "@/lib/actions/textbooks";
 import type { ChapterWithChildren, TextbookWithSubject } from "@/lib/actions/textbooks";
 
 type Props = {
   textbooks: TextbookWithSubject[];
   chaptersMap: Record<string, ChapterWithChildren[]>;
 };
+
+type RightView = "chapters" | "pdf";
 
 const statusConfig: Record<string, { color: string; dotColor: string }> = {
   완료: { color: "text-eo-success", dotColor: "bg-eo-success" },
@@ -24,6 +26,10 @@ export function TextbooksClient({ textbooks, chaptersMap }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [chapterDialogOpen, setChapterDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const [rightView, setRightView] = useState<RightView>("chapters");
+  const [pdfSignedUrl, setPdfSignedUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const activeTextbook = textbooks.find((t) => t.id === activeId);
   const chapters = chaptersMap[activeId] ?? [];
@@ -62,6 +68,24 @@ export function TextbooksClient({ textbooks, chaptersMap }: Props) {
     return { completed, total };
   }
 
+  async function handleShowPdf() {
+    if (!activeTextbook?.pdf_url) return;
+
+    setPdfLoading(true);
+    const result = await getTextbookPdfUrl(activeTextbook.pdf_url);
+    if ("url" in result) {
+      setPdfSignedUrl(result.url);
+      setRightView("pdf");
+    }
+    setPdfLoading(false);
+  }
+
+  function handleSelectTextbook(id: string) {
+    setActiveId(id);
+    setRightView("chapters");
+    setPdfSignedUrl(null);
+  }
+
   const overallProgress = getProgress(chapters);
   const progressPct =
     overallProgress.total > 0
@@ -92,16 +116,21 @@ export function TextbooksClient({ textbooks, chaptersMap }: Props) {
           return (
             <div
               key={tb.id}
-              onClick={() => setActiveId(tb.id)}
+              onClick={() => handleSelectTextbook(tb.id)}
               className={`flex flex-col gap-2 p-4 rounded-xl cursor-pointer ${
                 isActive
                   ? "bg-eo-primary border-2 border-eo-primary"
                   : "bg-white border border-eo-border hover:border-eo-border-strong"
               }`}
             >
-              <span className={`text-sm font-semibold ${isActive ? "text-white" : "text-eo-text-primary"}`}>
-                {tb.name}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-semibold flex-1 ${isActive ? "text-white" : "text-eo-text-primary"}`}>
+                  {tb.name}
+                </span>
+                {tb.pdf_url && (
+                  <FileText className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-white/70" : "text-eo-primary"}`} />
+                )}
+              </div>
               <div className="flex items-center gap-3">
                 <span
                   className={`text-[11px] font-medium px-2 py-0.5 rounded ${
@@ -131,7 +160,7 @@ export function TextbooksClient({ textbooks, chaptersMap }: Props) {
         )}
       </div>
 
-      {/* Right: Chapter Tree */}
+      {/* Right: Chapter Tree or PDF Viewer */}
       <div className="flex flex-col gap-4 p-6 bg-white rounded-xl border border-eo-border flex-1">
         {activeTextbook ? (
           <>
@@ -142,73 +171,124 @@ export function TextbooksClient({ textbooks, chaptersMap }: Props) {
                   {activeTextbook.subjects?.name ?? "-"} · {activeTextbook.year} · {activeTextbook.grade ?? "-"} · 전체 {overallProgress.total}단원
                 </span>
               </div>
-              <Button variant="outline" size="sm" onClick={() => setChapterDialogOpen(true)}>단원 추가</Button>
+              <div className="flex items-center gap-2">
+                {activeTextbook.pdf_url && (
+                  <div className="flex items-center rounded-lg border border-eo-border overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRightView("chapters");
+                        setPdfSignedUrl(null);
+                      }}
+                      className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                        rightView === "chapters"
+                          ? "bg-eo-primary text-white"
+                          : "text-eo-text-secondary hover:text-eo-text-primary"
+                      }`}
+                    >
+                      단원 보기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleShowPdf}
+                      disabled={pdfLoading}
+                      className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                        rightView === "pdf"
+                          ? "bg-eo-primary text-white"
+                          : "text-eo-text-secondary hover:text-eo-text-primary"
+                      }`}
+                    >
+                      {pdfLoading ? "로딩..." : "PDF 보기"}
+                    </button>
+                  </div>
+                )}
+                {rightView === "chapters" && (
+                  <Button variant="outline" size="sm" onClick={() => setChapterDialogOpen(true)}>단원 추가</Button>
+                )}
+              </div>
             </div>
 
             <div className="h-px bg-eo-border" />
 
-            <div className="flex flex-col">
-              {chapters.map((ch) => {
-                const isExpanded = expandedChapters.has(ch.id);
-                const chProgress = getProgress(ch.children ?? []);
-                const chPct = chProgress.total > 0
-                  ? Math.round((chProgress.completed / chProgress.total) * 100)
-                  : 0;
+            {rightView === "chapters" ? (
+              <div className="flex flex-col">
+                {chapters.map((ch) => {
+                  const isExpanded = expandedChapters.has(ch.id);
+                  const chProgress = getProgress(ch.children ?? []);
+                  const chPct = chProgress.total > 0
+                    ? Math.round((chProgress.completed / chProgress.total) * 100)
+                    : 0;
 
-                return (
-                  <div key={ch.id} className="flex flex-col">
-                    <div
-                      className="flex items-center gap-2 py-2.5 cursor-pointer"
-                      onClick={() => toggleExpand(ch.id)}
-                    >
-                      {ch.children && ch.children.length > 0 ? (
-                        isExpanded ? (
-                          <ChevronDown className="w-4 h-4 text-eo-text-primary" />
+                  return (
+                    <div key={ch.id} className="flex flex-col">
+                      <div
+                        className="flex items-center gap-2 py-2.5 cursor-pointer"
+                        onClick={() => toggleExpand(ch.id)}
+                      >
+                        {ch.children && ch.children.length > 0 ? (
+                          isExpanded ? (
+                            <ChevronDown className="w-4 h-4 text-eo-text-primary" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4 text-eo-text-secondary" />
+                          )
                         ) : (
-                          <ChevronRight className="w-4 h-4 text-eo-text-secondary" />
-                        )
-                      ) : (
-                        <div className="w-4" />
-                      )}
-                      <span className="text-sm font-semibold text-eo-text-primary">{ch.title}</span>
-                      <span className="text-xs text-eo-text-secondary">
-                        {chProgress.completed}/{chProgress.total} 완료
-                      </span>
-                      <div className="w-[100px] h-1 rounded-full bg-[#E5E7EB] ml-2">
-                        <div
-                          className="h-full rounded-full bg-eo-primary"
-                          style={{ width: `${chPct}%` }}
-                        />
+                          <div className="w-4" />
+                        )}
+                        <span className="text-sm font-semibold text-eo-text-primary">{ch.title}</span>
+                        <span className="text-xs text-eo-text-secondary">
+                          {chProgress.completed}/{chProgress.total} 완료
+                        </span>
+                        <div className="w-[100px] h-1 rounded-full bg-[#E5E7EB] ml-2">
+                          <div
+                            className="h-full rounded-full bg-eo-primary"
+                            style={{ width: `${chPct}%` }}
+                          />
+                        </div>
                       </div>
+                      {isExpanded &&
+                        ch.children?.map((sub) => {
+                          const cfg = statusConfig[sub.status] ?? statusConfig["미진행"];
+                          return (
+                            <div key={sub.id} className="flex items-center gap-2 py-2 pl-8">
+                              <div className={`w-1.5 h-1.5 rounded-full ${cfg.dotColor}`} />
+                              <span
+                                className={`text-[13px] ${
+                                  sub.status === "진행중"
+                                    ? "font-medium text-eo-primary"
+                                    : sub.status === "미진행"
+                                      ? "text-eo-text-secondary"
+                                      : "text-eo-text-primary"
+                                }`}
+                              >
+                                {sub.title}
+                              </span>
+                              <span className={`text-[11px] ml-auto ${cfg.color}`}>{sub.status}</span>
+                            </div>
+                          );
+                        })}
                     </div>
-                    {isExpanded &&
-                      ch.children?.map((sub) => {
-                        const cfg = statusConfig[sub.status] ?? statusConfig["미진행"];
-                        return (
-                          <div key={sub.id} className="flex items-center gap-2 py-2 pl-8">
-                            <div className={`w-1.5 h-1.5 rounded-full ${cfg.dotColor}`} />
-                            <span
-                              className={`text-[13px] ${
-                                sub.status === "진행중"
-                                  ? "font-medium text-eo-primary"
-                                  : sub.status === "미진행"
-                                    ? "text-eo-text-secondary"
-                                    : "text-eo-text-primary"
-                              }`}
-                            >
-                              {sub.title}
-                            </span>
-                            <span className={`text-[11px] ml-auto ${cfg.color}`}>{sub.status}</span>
-                          </div>
-                        );
-                      })}
+                  );
+                })}
+                {chapters.length === 0 && (
+                  <span className="text-sm text-eo-text-secondary py-4">단원이 없습니다.</span>
+                )}
+              </div>
+            ) : (
+              /* PDF Viewer */
+              <div className="flex-1 min-h-[600px] rounded-lg overflow-hidden bg-gray-100">
+                {pdfSignedUrl ? (
+                  <iframe
+                    src={pdfSignedUrl}
+                    className="w-full h-full min-h-[600px]"
+                    title={`${activeTextbook.name} PDF`}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-sm text-eo-text-secondary">
+                    PDF를 불러오는 중...
                   </div>
-                );
-              })}
-              {chapters.length === 0 && (
-                <span className="text-sm text-eo-text-secondary py-4">단원이 없습니다.</span>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <span className="text-sm text-eo-text-secondary">교재를 선택해주세요.</span>

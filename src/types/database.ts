@@ -393,6 +393,7 @@ export type Database = {
           subject_id: string;
           year: number | null;
           grade: string | null;
+          pdf_url: string | null;
           sort_order: number;
           created_at: string;
         };
@@ -403,6 +404,7 @@ export type Database = {
           subject_id: string;
           year?: number | null;
           grade?: string | null;
+          pdf_url?: string | null;
           sort_order?: number;
           created_at?: string;
         };
@@ -413,6 +415,7 @@ export type Database = {
           subject_id?: string;
           year?: number | null;
           grade?: string | null;
+          pdf_url?: string | null;
           sort_order?: number;
           created_at?: string;
         };
