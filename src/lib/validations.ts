@@ -76,6 +76,7 @@ export const updateStudentSchema = createStudentSchema.extend({
 export const classSchema = z.object({
   name: requiredString("반 이름").max(50, "반 이름은 50자 이내로 입력하세요."),
   description: optionalString,
+  subject_id: optionalString,
 });
 
 // ─── Subjects ───────────────────────────────────────────────────────────────

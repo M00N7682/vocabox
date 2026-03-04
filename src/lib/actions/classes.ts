@@ -7,6 +7,7 @@ import { classSchema, formDataToObject, validate } from "@/lib/validations";
 
 export type ClassWithStudents = Class & {
   class_students: { student_id: string }[];
+  subjects: { id: string; name: string; color: string } | null;
 };
 
 export async function getClasses(): Promise<ClassWithStudents[]> {
@@ -14,7 +15,7 @@ export async function getClasses(): Promise<ClassWithStudents[]> {
 
   const { data, error } = await supabase
     .from("classes")
-    .select("*, class_students(student_id)")
+    .select("*, class_students(student_id), subjects(id, name, color)")
     .order("sort_order");
 
   if (error) throw error;
@@ -58,6 +59,7 @@ export async function createClass(formData: FormData) {
     academy_id: profile.data.academy_id,
     name: parsed.data.name,
     description: parsed.data.description || null,
+    subject_id: parsed.data.subject_id || null,
   });
 
   if (error) return { error: error.message };
@@ -77,6 +79,7 @@ export async function updateClass(id: string, formData: FormData) {
     .update({
       name: parsed.data.name,
       description: parsed.data.description || null,
+      subject_id: parsed.data.subject_id || null,
     })
     .eq("id", id);
 

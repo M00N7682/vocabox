@@ -1,64 +1,69 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createAssessment } from "@/lib/actions/assessments";
 
-type SubjectWithStudents = {
+type SubjectItem = { id: string; name: string };
+type ClassItem = {
   id: string;
   name: string;
+  subjectId: string | null;
   studentIds: string[];
 };
-
 type StudentItem = { id: string; name: string; grade: string | null };
 
 type Props = {
-  subjects: SubjectWithStudents[];
+  subjects: SubjectItem[];
+  classes: ClassItem[];
   students: StudentItem[];
 };
 
-export function AssessmentAddButton({ subjects, students }: Props) {
+export function AssessmentAddButton({ subjects, classes, students }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
-  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+  const [selectedClassIds, setSelectedClassIds] = useState<Set<string>>(
+    new Set()
+  );
 
-  const subjectStudents = useMemo(() => {
+  // Classes filtered by selected subject
+  const filteredClasses = useMemo(() => {
     if (!selectedSubjectId) return [];
-    const subject = subjects.find((s) => s.id === selectedSubjectId);
-    if (!subject) return [];
-    const ids = new Set(subject.studentIds);
-    return students.filter((s) => ids.has(s.id));
-  }, [selectedSubjectId, subjects, students]);
+    return classes.filter((c) => c.subjectId === selectedSubjectId);
+  }, [selectedSubjectId, classes]);
+
+  // Student IDs from selected classes (deduplicated)
+  const enrolledStudentIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const cls of classes) {
+      if (selectedClassIds.has(cls.id)) {
+        for (const sid of cls.studentIds) ids.add(sid);
+      }
+    }
+    return ids;
+  }, [selectedClassIds, classes]);
+
+  // Resolved student objects for display
+  const enrolledStudents = useMemo(() => {
+    return students.filter((s) => enrolledStudentIds.has(s.id));
+  }, [enrolledStudentIds, students]);
 
   function handleSubjectChange(subjectId: string) {
     setSelectedSubjectId(subjectId);
-    if (subjectId) {
-      const subject = subjects.find((s) => s.id === subjectId);
-      setSelectedStudentIds(new Set(subject?.studentIds ?? []));
-    } else {
-      setSelectedStudentIds(new Set());
-    }
+    setSelectedClassIds(new Set());
   }
 
-  function toggleStudent(id: string) {
-    setSelectedStudentIds((prev) => {
+  function toggleClass(classId: string) {
+    setSelectedClassIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(classId)) next.delete(classId);
+      else next.add(classId);
       return next;
     });
-  }
-
-  function toggleAll() {
-    if (selectedStudentIds.size === subjectStudents.length) {
-      setSelectedStudentIds(new Set());
-    } else {
-      setSelectedStudentIds(new Set(subjectStudents.map((s) => s.id)));
-    }
   }
 
   function handleSubmit(formData: FormData) {
@@ -70,7 +75,7 @@ export function AssessmentAddButton({ subjects, students }: Props) {
       } else {
         setOpen(false);
         setSelectedSubjectId("");
-        setSelectedStudentIds(new Set());
+        setSelectedClassIds(new Set());
         setError(null);
       }
     });
@@ -111,7 +116,9 @@ export function AssessmentAddButton({ subjects, students }: Props) {
 
               <div className="flex flex-col gap-4 px-6 py-5">
                 {error && (
-                  <div className="p-3 rounded-lg bg-red-50 text-sm text-eo-danger">{error}</div>
+                  <div className="p-3 rounded-lg bg-red-50 text-sm text-eo-danger">
+                    {error}
+                  </div>
                 )}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-eo-text-primary">
@@ -139,7 +146,7 @@ export function AssessmentAddButton({ subjects, students }: Props) {
                       <option value="">선택</option>
                       {subjects.map((s) => (
                         <option key={s.id} value={s.id}>
-                          {s.name} ({s.studentIds.length}명)
+                          {s.name}
                         </option>
                       ))}
                     </select>
@@ -218,64 +225,76 @@ export function AssessmentAddButton({ subjects, students }: Props) {
                   </div>
                 </div>
 
-                {/* Student Selection */}
-                {selectedSubjectId && subjectStudents.length > 0 && (
+                {/* Class-based student selection */}
+                {selectedSubjectId && filteredClasses.length > 0 && (
                   <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-eo-text-primary">
-                        대상 학생 ({selectedStudentIds.size}/{subjectStudents.length})
-                      </label>
-                      <button
-                        type="button"
-                        onClick={toggleAll}
-                        className="text-xs text-eo-primary hover:underline"
-                      >
-                        {selectedStudentIds.size === subjectStudents.length
-                          ? "전체 해제"
-                          : "전체 선택"}
-                      </button>
-                    </div>
-                    <div className="border border-eo-border rounded-lg max-h-[200px] overflow-auto">
-                      {subjectStudents.map((s) => (
+                    <label className="text-sm font-medium text-eo-text-primary">
+                      대상 반 선택
+                    </label>
+                    <div className="flex flex-col gap-1 border border-eo-border rounded-lg p-2">
+                      {filteredClasses.map((cls) => (
                         <label
-                          key={s.id}
-                          className="flex items-center gap-3 px-3 py-2 hover:bg-eo-bg-surface cursor-pointer border-b border-eo-border last:border-0"
+                          key={cls.id}
+                          className="flex items-center gap-3 px-3 py-2 hover:bg-eo-bg-surface cursor-pointer rounded"
                         >
                           <input
                             type="checkbox"
-                            checked={selectedStudentIds.has(s.id)}
-                            onChange={() => toggleStudent(s.id)}
+                            checked={selectedClassIds.has(cls.id)}
+                            onChange={() => toggleClass(cls.id)}
                             className="w-4 h-4 rounded border-eo-border text-eo-primary"
                           />
                           <span className="text-sm text-eo-text-primary flex-1">
+                            {cls.name}
+                          </span>
+                          <span className="text-xs text-eo-text-secondary">
+                            {cls.studentIds.length}명
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedSubjectId && filteredClasses.length === 0 && (
+                  <div className="p-3 rounded-lg bg-[#FEF3C7] border border-[#FDE68A] text-[12px] text-[#92400E]">
+                    이 과목에 연결된 반이 없습니다. &quot;반 관리&quot;에서
+                    반을 만들고 과목을 연결해주세요.
+                  </div>
+                )}
+
+                {/* Show enrolled students preview */}
+                {enrolledStudents.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-sm font-medium text-eo-text-primary">
+                      대상 학생 ({enrolledStudents.length}명)
+                    </span>
+                    <div className="border border-eo-border rounded-lg max-h-[160px] overflow-auto">
+                      {enrolledStudents.map((s) => (
+                        <div
+                          key={s.id}
+                          className="flex items-center gap-3 px-3 py-1.5 border-b border-eo-border last:border-0"
+                        >
+                          <span className="text-[13px] text-eo-text-primary flex-1">
                             {s.name}
                           </span>
                           <span className="text-xs text-eo-text-secondary">
                             {s.grade ?? "-"}
                           </span>
-                        </label>
+                        </div>
                       ))}
                     </div>
-                    {Array.from(selectedStudentIds).map((id) => (
-                      <input
-                        key={id}
-                        type="hidden"
-                        name="student_ids"
-                        value={id}
-                      />
-                    ))}
                   </div>
                 )}
 
-                {selectedSubjectId && subjectStudents.length === 0 && (
-                  <div className="flex items-start gap-2 p-3 rounded-lg bg-[#FEF3C7] border border-[#FDE68A]">
-                    <AlertTriangle className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
-                    <div className="text-[12px] text-[#92400E]">
-                      이 과목에 수강 학생이 없습니다. 평가를 만들 수 있지만,
-                      성적 입력 시 &quot;과목 관리&quot;에서 학생을 먼저 배정해야 합니다.
-                    </div>
-                  </div>
-                )}
+                {/* Hidden inputs for student_ids */}
+                {Array.from(enrolledStudentIds).map((id) => (
+                  <input
+                    key={id}
+                    type="hidden"
+                    name="student_ids"
+                    value={id}
+                  />
+                ))}
               </div>
 
               <div className="flex items-center justify-end px-6 py-4 border-t border-eo-border gap-2">

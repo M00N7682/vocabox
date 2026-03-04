@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getAssessments } from "@/lib/actions/assessments";
 import { getSubjects } from "@/lib/actions/subjects";
 import { getStudents } from "@/lib/actions/students";
+import { getClasses } from "@/lib/actions/classes";
 import { SearchInput } from "@/components/shared/search-input";
 import { FilterDropdown } from "@/components/shared/filter-dropdown";
 import { Suspense } from "react";
@@ -91,7 +92,7 @@ export default async function AssessmentsPage({
   }>;
 }) {
   const params = await searchParams;
-  const [assessments, subjects, allStudents] = await Promise.all([
+  const [assessments, subjects, allStudents, allClasses] = await Promise.all([
     getAssessments({
       subjectId: params.subject,
       type: params.type,
@@ -100,6 +101,7 @@ export default async function AssessmentsPage({
     }),
     getSubjects(),
     getStudents({ activeOnly: true }),
+    getClasses(),
   ]);
 
   return (
@@ -109,10 +111,12 @@ export default async function AssessmentsPage({
         description="시험, 퀴즈, 과제 등 평가를 관리합니다"
       >
         <AssessmentAddButton
-          subjects={subjects.map((s) => ({
-            id: s.id,
-            name: s.name,
-            studentIds: (s.subject_students ?? []).map((ss) => ss.student_id),
+          subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
+          classes={allClasses.map((c) => ({
+            id: c.id,
+            name: c.name,
+            subjectId: c.subject_id,
+            studentIds: (c.class_students ?? []).map((cs) => cs.student_id),
           }))}
           students={allStudents.map((s) => ({ id: s.id, name: s.name, grade: s.grade }))}
         />

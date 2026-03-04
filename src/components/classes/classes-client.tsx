@@ -70,12 +70,22 @@ export function ClassesClient({ classes, subjects, students }: Props) {
                   {studentCount}명
                 </span>
               </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[11px] text-eo-text-secondary">설명</span>
-                <span className="text-[13px] text-eo-text-primary">
-                  {cls.description || "-"}
+              {cls.subjects && (
+                <span
+                  className="inline-flex self-start text-[11px] font-medium px-2 py-0.5 rounded"
+                  style={{
+                    backgroundColor: `${cls.subjects.color}20`,
+                    color: cls.subjects.color,
+                  }}
+                >
+                  {cls.subjects.name}
                 </span>
-              </div>
+              )}
+              {cls.description && (
+                <span className="text-[13px] text-eo-text-secondary">
+                  {cls.description}
+                </span>
+              )}
               <button
                 onClick={() => setStudentManagerOpen(isExpanded ? null : cls.id)}
                 className="flex items-center gap-1.5 text-[12px] font-medium text-eo-primary hover:text-[#4338CA]"
@@ -247,6 +257,24 @@ function ClassFormDialog({
                 placeholder="반 이름을 입력하세요"
                 required
               />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-eo-text-primary">
+                과목
+              </label>
+              <select
+                name="subject_id"
+                defaultValue={cls?.subject_id ?? ""}
+                className="h-10 px-3 rounded-lg border border-eo-border text-sm"
+              >
+                <option value="">과목 없음</option>
+                {subjects.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="flex flex-col gap-1.5">

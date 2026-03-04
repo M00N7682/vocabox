@@ -4,6 +4,7 @@ import { ScoreInputClient } from "@/components/scores/score-input-client";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { DeleteAssessmentButton } from "@/components/assessments/delete-assessment-button";
 
 const typeStyles: Record<string, string> = {
   시험: "bg-[#DBEAFE] text-[#1E40AF]",
@@ -58,6 +59,10 @@ export default async function AssessmentDetailPage({
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
+        <DeleteAssessmentButton
+          assessmentId={id}
+          assessmentName={assessment.name}
+        />
         <span
           className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${typeStyles[assessment.type] ?? "bg-[#F1F5F9] text-[#6B7280]"}`}
         >
