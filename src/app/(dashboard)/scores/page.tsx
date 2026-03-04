@@ -65,20 +65,16 @@ export default async function ScoresPage({
     );
   }
 
-  const [assessment, scores] = await Promise.all([
+  const [assessment, scores, allStudents] = await Promise.all([
     getAssessment(assessmentId),
     getAssessmentScores(assessmentId),
+    getStudents({ activeOnly: true }),
   ]);
 
-  // Fetch available students if subject exists (for inline enrollment)
-  let availableStudents: { id: string; name: string; grade: string | null }[] = [];
-  if (assessment.subject_id && scores.length === 0) {
-    const allStudents = await getStudents({ activeOnly: true });
-    const enrolledIds = new Set(scores.map((s) => s.student_id));
-    availableStudents = allStudents
-      .filter((s) => !enrolledIds.has(s.id))
-      .map((s) => ({ id: s.id, name: s.name, grade: s.grade }));
-  }
+  const enrolledIds = new Set(scores.map((s) => s.student_id));
+  const availableStudents = allStudents
+    .filter((s) => !enrolledIds.has(s.id))
+    .map((s) => ({ id: s.id, name: s.name, grade: s.grade }));
 
   return (
     <div className="flex flex-col gap-7 p-10 flex-1 overflow-auto">

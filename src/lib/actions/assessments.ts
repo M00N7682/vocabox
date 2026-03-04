@@ -227,7 +227,24 @@ export async function createAssessment(formData: FormData) {
     }
   }
 
+  // Auto-assign students if student_ids provided
+  const studentIds = formData.getAll("student_ids") as string[];
+  if (assessment && studentIds.length > 0) {
+    const rows = studentIds.map((studentId) => ({
+      assessment_id: assessment.id,
+      student_id: studentId,
+      status: "응시" as const,
+    }));
+    const { error: scoreError } = await supabase
+      .from("assessment_scores")
+      .upsert(rows, { onConflict: "assessment_id,student_id" });
+    if (scoreError) {
+      return { error: `평가는 생성되었으나 학생 배정 실패: ${scoreError.message}` };
+    }
+  }
+
   revalidatePath("/assessments");
+  revalidatePath("/scores");
   return { success: true, id: assessment?.id };
 }
 

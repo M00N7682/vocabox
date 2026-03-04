@@ -3,6 +3,7 @@ import { AssessmentAddButton } from "@/components/assessments/assessment-add-but
 import Link from "next/link";
 import { getAssessments } from "@/lib/actions/assessments";
 import { getSubjects } from "@/lib/actions/subjects";
+import { getStudents } from "@/lib/actions/students";
 import { SearchInput } from "@/components/shared/search-input";
 import { FilterDropdown } from "@/components/shared/filter-dropdown";
 import { Suspense } from "react";
@@ -90,7 +91,7 @@ export default async function AssessmentsPage({
   }>;
 }) {
   const params = await searchParams;
-  const [assessments, subjects] = await Promise.all([
+  const [assessments, subjects, allStudents] = await Promise.all([
     getAssessments({
       subjectId: params.subject,
       type: params.type,
@@ -98,6 +99,7 @@ export default async function AssessmentsPage({
       search: params.search,
     }),
     getSubjects(),
+    getStudents({ activeOnly: true }),
   ]);
 
   return (
@@ -110,8 +112,9 @@ export default async function AssessmentsPage({
           subjects={subjects.map((s) => ({
             id: s.id,
             name: s.name,
-            studentCount: s.subject_students?.length ?? 0,
+            studentIds: (s.subject_students ?? []).map((ss) => ss.student_id),
           }))}
+          students={allStudents.map((s) => ({ id: s.id, name: s.name, grade: s.grade }))}
         />
       </PageHeader>
 

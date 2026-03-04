@@ -1,25 +1,65 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { Plus, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createAssessment } from "@/lib/actions/assessments";
-import Link from "next/link";
 
-type SubjectWithCount = { id: string; name: string; studentCount: number };
-
-type Props = {
-  subjects: SubjectWithCount[];
+type SubjectWithStudents = {
+  id: string;
+  name: string;
+  studentIds: string[];
 };
 
-export function AssessmentAddButton({ subjects }: Props) {
+type StudentItem = { id: string; name: string; grade: string | null };
+
+type Props = {
+  subjects: SubjectWithStudents[];
+  students: StudentItem[];
+};
+
+export function AssessmentAddButton({ subjects, students }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
 
-  const selectedSubject = subjects.find((s) => s.id === selectedSubjectId);
+  const subjectStudents = useMemo(() => {
+    if (!selectedSubjectId) return [];
+    const subject = subjects.find((s) => s.id === selectedSubjectId);
+    if (!subject) return [];
+    const ids = new Set(subject.studentIds);
+    return students.filter((s) => ids.has(s.id));
+  }, [selectedSubjectId, subjects, students]);
+
+  function handleSubjectChange(subjectId: string) {
+    setSelectedSubjectId(subjectId);
+    if (subjectId) {
+      const subject = subjects.find((s) => s.id === subjectId);
+      setSelectedStudentIds(new Set(subject?.studentIds ?? []));
+    } else {
+      setSelectedStudentIds(new Set());
+    }
+  }
+
+  function toggleStudent(id: string) {
+    setSelectedStudentIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    if (selectedStudentIds.size === subjectStudents.length) {
+      setSelectedStudentIds(new Set());
+    } else {
+      setSelectedStudentIds(new Set(subjectStudents.map((s) => s.id)));
+    }
+  }
 
   function handleSubmit(formData: FormData) {
     setError(null);
@@ -29,8 +69,9 @@ export function AssessmentAddButton({ subjects }: Props) {
         setError(result.error);
       } else {
         setOpen(false);
-        setError(null);
         setSelectedSubjectId("");
+        setSelectedStudentIds(new Set());
+        setError(null);
       }
     });
   }
@@ -51,7 +92,7 @@ export function AssessmentAddButton({ subjects }: Props) {
           onClick={() => setOpen(false)}
         >
           <div
-            className="bg-white rounded-xl w-[520px] max-h-[90vh] overflow-auto"
+            className="bg-white rounded-xl w-[560px] max-h-[90vh] overflow-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <form action={handleSubmit}>
@@ -90,30 +131,18 @@ export function AssessmentAddButton({ subjects }: Props) {
                     </label>
                     <select
                       name="subject_id"
+                      value={selectedSubjectId}
+                      onChange={(e) => handleSubjectChange(e.target.value)}
                       className="h-10 px-3 rounded-lg border border-eo-border text-sm"
                       required
-                      value={selectedSubjectId}
-                      onChange={(e) => setSelectedSubjectId(e.target.value)}
                     >
                       <option value="">선택</option>
                       {subjects.map((s) => (
                         <option key={s.id} value={s.id}>
-                          {s.name} ({s.studentCount}명)
+                          {s.name} ({s.studentIds.length}명)
                         </option>
                       ))}
                     </select>
-                    {selectedSubject && selectedSubject.studentCount === 0 && (
-                      <div className="flex items-start gap-2 p-2.5 rounded-lg bg-[#FEF3C7] border border-[#FDE68A]">
-                        <AlertTriangle className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
-                        <div className="text-[12px] text-[#92400E]">
-                          이 과목에 수강 학생이 없어 성적 입력이 불가합니다.{" "}
-                          <Link href="/subjects" className="underline font-medium hover:text-[#78350F]" onClick={(e) => e.stopPropagation()}>
-                            과목 관리
-                          </Link>
-                          에서 학생을 먼저 배정해주세요.
-                        </div>
-                      </div>
-                    )}
                   </div>
                   <div className="flex flex-col gap-1.5 flex-1">
                     <label className="text-sm font-medium text-eo-text-primary">
@@ -179,7 +208,7 @@ export function AssessmentAddButton({ subjects }: Props) {
                     </label>
                     <select
                       name="status"
-                      defaultValue="예정"
+                      defaultValue="진행중"
                       className="h-10 px-3 rounded-lg border border-eo-border text-sm"
                     >
                       <option value="예정">예정</option>
@@ -188,6 +217,65 @@ export function AssessmentAddButton({ subjects }: Props) {
                     </select>
                   </div>
                 </div>
+
+                {/* Student Selection */}
+                {selectedSubjectId && subjectStudents.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-eo-text-primary">
+                        대상 학생 ({selectedStudentIds.size}/{subjectStudents.length})
+                      </label>
+                      <button
+                        type="button"
+                        onClick={toggleAll}
+                        className="text-xs text-eo-primary hover:underline"
+                      >
+                        {selectedStudentIds.size === subjectStudents.length
+                          ? "전체 해제"
+                          : "전체 선택"}
+                      </button>
+                    </div>
+                    <div className="border border-eo-border rounded-lg max-h-[200px] overflow-auto">
+                      {subjectStudents.map((s) => (
+                        <label
+                          key={s.id}
+                          className="flex items-center gap-3 px-3 py-2 hover:bg-eo-bg-surface cursor-pointer border-b border-eo-border last:border-0"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedStudentIds.has(s.id)}
+                            onChange={() => toggleStudent(s.id)}
+                            className="w-4 h-4 rounded border-eo-border text-eo-primary"
+                          />
+                          <span className="text-sm text-eo-text-primary flex-1">
+                            {s.name}
+                          </span>
+                          <span className="text-xs text-eo-text-secondary">
+                            {s.grade ?? "-"}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    {Array.from(selectedStudentIds).map((id) => (
+                      <input
+                        key={id}
+                        type="hidden"
+                        name="student_ids"
+                        value={id}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {selectedSubjectId && subjectStudents.length === 0 && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-[#FEF3C7] border border-[#FDE68A]">
+                    <AlertTriangle className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
+                    <div className="text-[12px] text-[#92400E]">
+                      이 과목에 수강 학생이 없습니다. 평가를 만들 수 있지만,
+                      성적 입력 시 &quot;과목 관리&quot;에서 학생을 먼저 배정해야 합니다.
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end px-6 py-4 border-t border-eo-border gap-2">

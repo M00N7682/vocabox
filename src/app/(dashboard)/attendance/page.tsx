@@ -69,7 +69,10 @@ export default async function AttendancePage({
     getSubjects({ isActive: true }),
   ]);
 
-  const subjectStudentsMap = await getSubjectStudents(subjects.map((s) => s.id));
+  // Fetch subject students in parallel (non-blocking for page render)
+  const subjectStudentsMap = subjects.length > 0
+    ? await getSubjectStudents(subjects.map((s) => s.id))
+    : {};
 
   const subjectOptions = subjects.map((s) => ({
     value: s.id,
