@@ -332,6 +332,28 @@ export async function createStudent(formData: FormData) {
 }
 
 // ---------------------------------------------------------------------------
+// deleteStudent
+// ---------------------------------------------------------------------------
+
+export async function deleteStudent(id: string) {
+  const supabase = await createClient();
+
+  // Delete related records first (cascade may handle some, but be explicit)
+  await supabase.from("assignment_students").delete().eq("student_id", id);
+  await supabase.from("assessment_scores").delete().eq("student_id", id);
+  await supabase.from("attendance").delete().eq("student_id", id);
+  await supabase.from("class_students").delete().eq("student_id", id);
+  await supabase.from("subject_students").delete().eq("student_id", id);
+
+  const { error } = await supabase.from("students").delete().eq("id", id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/students");
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
 // updateStudent
 // ---------------------------------------------------------------------------
 

@@ -11,6 +11,8 @@ import { getSubjects } from "@/lib/actions/subjects";
 import { getClasses } from "@/lib/actions/classes";
 import { StudentAssignmentsTab } from "@/components/students/student-assignments-tab";
 import { StudentEnrollmentManager } from "@/components/students/student-enrollment-manager";
+import { EditStudentDialog } from "@/components/students/edit-student-dialog";
+import { DeleteStudentButton } from "@/components/students/delete-student-button";
 
 function getScoreColor(score: number, total: number): string {
   const pct = total > 0 ? (score / total) * 100 : 0;
@@ -113,18 +115,8 @@ export default async function StudentDetailPage({
         title={student.name}
         description={`${student.school ?? ""} ${student.grade ?? ""}`}
       >
-        <Link
-          href={`/students/${id}?tab=info`}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md border border-eo-border text-eo-text-primary hover:bg-eo-bg-surface transition-colors"
-        >
-          정보 수정
-        </Link>
-        <Link
-          href="/assessments"
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-eo-primary hover:bg-[#4338CA] text-white transition-colors"
-        >
-          평가 목록
-        </Link>
+        <DeleteStudentButton studentId={id} studentName={student.name} />
+        <EditStudentDialog student={student} />
       </PageHeader>
 
       {/* Tabs */}
