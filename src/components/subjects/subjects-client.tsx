@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Users, X } from "lucide-react";
+import { Plus, Users, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SubjectFormDialog } from "./subject-form-dialog";
 import { FilterDropdown } from "@/components/shared/filter-dropdown";
 import { SearchInput } from "@/components/shared/search-input";
-import { addStudentToSubject, removeStudentFromSubject } from "@/lib/actions/subjects";
+import { addStudentToSubject, removeStudentFromSubject, deleteSubject } from "@/lib/actions/subjects";
 import type { Subject, Profile } from "@/types/database";
 import Link from "next/link";
 
@@ -37,6 +37,7 @@ export function SubjectsClient({ subjects, teachers, students }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editSubject, setEditSubject] = useState<Subject | null>(null);
   const [studentManagerOpen, setStudentManagerOpen] = useState<string | null>(null);
+  const [, startDeleteTransition] = useTransition();
 
   return (
     <>
@@ -114,13 +115,26 @@ export function SubjectsClient({ subjects, teachers, students }: Props) {
                   <span className="text-[11px] text-eo-text-secondary self-end ml-auto">비활성</span>
                 )}
               </div>
-              <button
-                onClick={() => setStudentManagerOpen(isExpanded ? null : s.id)}
-                className="flex items-center gap-1.5 text-[12px] font-medium text-eo-primary hover:text-[#4338CA]"
-              >
-                <Users className="w-3.5 h-3.5" />
-                {isExpanded ? "학생 관리 닫기" : "학생 관리"}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setStudentManagerOpen(isExpanded ? null : s.id)}
+                  className="flex items-center gap-1.5 text-[12px] font-medium text-eo-primary hover:text-[#4338CA]"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  {isExpanded ? "학생 관리 닫기" : "학생 관리"}
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm(`"${s.name}" 과목을 삭제하시겠습니까? 관련 평가/출결/과제 데이터에 영향이 있을 수 있습니다.`)) {
+                      startDeleteTransition(async () => { await deleteSubject(s.id); });
+                    }
+                  }}
+                  className="flex items-center gap-1 text-[12px] text-eo-text-tertiary hover:text-eo-danger"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  삭제
+                </button>
+              </div>
               {isExpanded && (
                 <SubjectStudentManager
                   subjectId={s.id}

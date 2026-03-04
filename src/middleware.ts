@@ -29,9 +29,12 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  // Use getSession (cookie-only, no network call) for routing decisions.
+  // Actual auth verification happens in server components via getUser().
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   const { pathname } = request.nextUrl;
 

@@ -5,6 +5,7 @@ import { SearchInput } from "@/components/shared/search-input";
 import { Bell } from "lucide-react";
 import { Suspense } from "react";
 import Link from "next/link";
+import { NotificationActions } from "@/components/notifications/notification-actions";
 
 const typeOptions = [
   { value: "attendance", label: "출결" },
@@ -143,15 +144,7 @@ async function NotificationsTable({
               />
             </div>
             <div className="w-[70px]">
-              <span
-                className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                  n.is_read
-                    ? "bg-green-100 text-green-700"
-                    : "bg-gray-100 text-gray-500"
-                }`}
-              >
-                {n.is_read ? "읽음" : "안읽음"}
-              </span>
+              <NotificationActions id={n.id} isRead={n.is_read} />
             </div>
           </div>
         ))

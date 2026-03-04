@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Search, ChevronDown, ChevronRight, FileText, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createChapter, updateTextbook, deleteTextbook, getTextbookPdfUrl } from "@/lib/actions/textbooks";
+import { createChapter, updateChapterStatus, deleteChapter, updateTextbook, deleteTextbook, getTextbookPdfUrl } from "@/lib/actions/textbooks";
 import type { ChapterWithChildren, TextbookWithSubject } from "@/lib/actions/textbooks";
 
 type Props = {
@@ -260,8 +260,10 @@ export function TextbooksClient({ textbooks, chaptersMap, subjects }: Props) {
                       {isExpanded &&
                         ch.children?.map((sub) => {
                           const cfg = statusConfig[sub.status] ?? statusConfig["미진행"];
+                          const nextStatus =
+                            sub.status === "미진행" ? "진행중" : sub.status === "진행중" ? "완료" : "미진행";
                           return (
-                            <div key={sub.id} className="flex items-center gap-2 py-2 pl-8">
+                            <div key={sub.id} className="flex items-center gap-2 py-2 pl-8 group">
                               <div className={`w-1.5 h-1.5 rounded-full ${cfg.dotColor}`} />
                               <span
                                 className={`text-[13px] ${
@@ -274,7 +276,31 @@ export function TextbooksClient({ textbooks, chaptersMap, subjects }: Props) {
                               >
                                 {sub.title}
                               </span>
-                              <span className={`text-[11px] ml-auto ${cfg.color}`}>{sub.status}</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  startTransition(async () => {
+                                    await deleteChapter(sub.id);
+                                  })
+                                }
+                                className="text-eo-text-tertiary hover:text-eo-danger opacity-0 group-hover:opacity-100 transition-opacity ml-auto"
+                                title="삭제"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  startTransition(async () => {
+                                    await updateChapterStatus(sub.id, nextStatus as "완료" | "진행중" | "미진행");
+                                  })
+                                }
+                                disabled={isPending}
+                                className={`text-[11px] cursor-pointer hover:underline ${cfg.color}`}
+                                title={`클릭하면 "${nextStatus}"으로 변경`}
+                              >
+                                {sub.status}
+                              </button>
                             </div>
                           );
                         })}

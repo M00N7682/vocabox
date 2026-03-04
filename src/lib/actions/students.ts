@@ -17,12 +17,6 @@ export type SubjectInfo = {
 export type StudentWithDetails = Student & {
   class_students: { class_id: string; classes: { name: string } | null }[];
   subject_students: SubjectInfo[];
-  risk_alerts?: {
-    id: string;
-    risk_level: "concern" | "caution" | "danger";
-    is_resolved: boolean;
-    created_at: string;
-  }[];
 };
 
 export type ScoreWithBook = Score & {
@@ -82,8 +76,7 @@ export async function getStudents(options?: {
     .select(
       `*,
       class_students(class_id, classes(name)),
-      subject_students(subject_id, subjects(name, color)),
-      risk_alerts(id, risk_level, is_resolved, created_at)`
+      subject_students(subject_id, subjects(name, color))`
     )
     .order("created_at", { ascending: false });
 
@@ -135,8 +128,7 @@ export async function getStudent(id: string): Promise<StudentWithDetails> {
     .select(
       `*,
       class_students(class_id, classes(name)),
-      subject_students(subject_id, subjects(name, color)),
-      risk_alerts(id, risk_level, is_resolved, created_at)`
+      subject_students(subject_id, subjects(name, color))`
     )
     .eq("id", id)
     .single();

@@ -94,15 +94,28 @@ export async function calculateRiskForStudent(studentId: string): Promise<{
   let cautionFlags = 0;
   let concernFlags = 0;
 
-  // Check recent N assessment_scores avg
-  const { data: recentScores } = await supabase
-    .from("assessment_scores")
-    .select("score")
-    .eq("student_id", studentId)
-    .not("score", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(scoreCount);
+  // Fetch all risk data in parallel
+  const [{ data: recentScores }, { data: allAttendance }, { data: notSubmitted }] =
+    await Promise.all([
+      supabase
+        .from("assessment_scores")
+        .select("score")
+        .eq("student_id", studentId)
+        .not("score", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(scoreCount),
+      supabase
+        .from("attendance")
+        .select("status")
+        .eq("student_id", studentId),
+      supabase
+        .from("assignment_students")
+        .select("id")
+        .eq("student_id", studentId)
+        .eq("status", "not_submitted"),
+    ]);
 
+  // Check recent N assessment_scores avg
   if (recentScores && recentScores.length >= scoreCount) {
     const avg =
       recentScores.reduce((sum, s) => sum + (s.score ?? 0), 0) /
@@ -126,11 +139,6 @@ export async function calculateRiskForStudent(studentId: string): Promise<{
   }
 
   // Check attendance absence rate
-  const { data: allAttendance } = await supabase
-    .from("attendance")
-    .select("status")
-    .eq("student_id", studentId);
-
   if (allAttendance && allAttendance.length > 0) {
     const absentCount = allAttendance.filter(
       (a) => a.status === "결석"
@@ -147,13 +155,6 @@ export async function calculateRiskForStudent(studentId: string): Promise<{
       reasons.push(`결석률 ${Math.round(rate)}% (관심)`);
     }
   }
-
-  // Check assignment_students with 'not_submitted' status count
-  const { data: notSubmitted } = await supabase
-    .from("assignment_students")
-    .select("id")
-    .eq("student_id", studentId)
-    .eq("status", "not_submitted");
 
   const notSubmittedCount = notSubmitted?.length ?? 0;
   if (notSubmittedCount >= missingCount * 1.5) {
