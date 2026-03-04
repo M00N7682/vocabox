@@ -8,6 +8,9 @@ import {
   getStudentAssignments,
 } from "@/lib/actions/students";
 import { getSubjects } from "@/lib/actions/subjects";
+import { getClasses } from "@/lib/actions/classes";
+import { StudentAssignmentsTab } from "@/components/students/student-assignments-tab";
+import { StudentEnrollmentManager } from "@/components/students/student-enrollment-manager";
 
 function getScoreColor(score: number, total: number): string {
   const pct = total > 0 ? (score / total) * 100 : 0;
@@ -42,22 +45,6 @@ function AttendanceStatusBadge({ status }: { status: string }) {
   );
 }
 
-function AssignmentStatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; cls: string }> = {
-    pending: { label: "예정", cls: "bg-gray-100 text-gray-600" },
-    submitted: { label: "제출", cls: "bg-green-100 text-green-700" },
-    not_submitted: { label: "미제출", cls: "bg-red-100 text-red-700" },
-    resubmit: { label: "재제출요청", cls: "bg-yellow-100 text-yellow-700" },
-  };
-  const c = config[status] ?? { label: status, cls: "bg-gray-100 text-gray-600" };
-  return (
-    <span
-      className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${c.cls}`}
-    >
-      {c.label}
-    </span>
-  );
-}
 
 export default async function StudentDetailPage({
   params,
@@ -70,13 +57,14 @@ export default async function StudentDetailPage({
   const { tab: tabParam } = await searchParams;
   const activeTab = tabParam ?? "scores";
 
-  const [student, assessmentScores, attendance, assignments, subjects] =
+  const [student, assessmentScores, attendance, assignments, subjects, classes] =
     await Promise.all([
       getStudent(id),
       getStudentAssessmentScores(id),
       getStudentAttendance(id),
       getStudentAssignments(id),
       getSubjects(),
+      getClasses(),
     ]);
 
   // Resolve student's enrolled subjects
@@ -89,6 +77,11 @@ export default async function StudentDetailPage({
     }
   }
   const studentSubjects = subjects.filter((s) => studentSubjectIds.has(s.id));
+
+  // Resolve student's enrolled classes
+  const studentClasses = classes.filter((c) =>
+    c.class_students?.some((cs) => cs.student_id === id)
+  );
 
   // Stats
   const allScores = assessmentScores
@@ -127,10 +120,10 @@ export default async function StudentDetailPage({
           정보 수정
         </Link>
         <Link
-          href="/scores"
+          href="/assessments"
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-eo-primary hover:bg-[#4338CA] text-white transition-colors"
         >
-          성적 입력
+          평가 목록
         </Link>
       </PageHeader>
 
@@ -194,32 +187,14 @@ export default async function StudentDetailPage({
             </div>
           </div>
 
-          {/* Subjects Card */}
-          <div className="flex flex-col gap-3 p-5 bg-white rounded-xl border border-eo-border">
-            <span className="text-[13px] font-semibold text-eo-text-primary">
-              수강 과목
-            </span>
-            <div className="flex gap-1.5 flex-wrap">
-              {studentSubjects.length > 0 ? (
-                studentSubjects.map((sub) => (
-                  <span
-                    key={sub.id}
-                    className="text-[13px] font-medium px-3 py-1.5 rounded-md"
-                    style={{
-                      backgroundColor: `${sub.color}20`,
-                      color: sub.color,
-                    }}
-                  >
-                    {sub.name}
-                  </span>
-                ))
-              ) : (
-                <span className="text-sm text-eo-text-secondary">
-                  수강 과목 없음
-                </span>
-              )}
-            </div>
-          </div>
+          {/* Class & Subject Enrollment */}
+          <StudentEnrollmentManager
+            studentId={id}
+            enrolledClasses={studentClasses.map((c) => ({ id: c.id, name: c.name }))}
+            enrolledSubjects={studentSubjects.map((s) => ({ id: s.id, name: s.name, color: s.color }))}
+            allClasses={classes.map((c) => ({ id: c.id, name: c.name }))}
+            allSubjects={subjects.map((s) => ({ id: s.id, name: s.name, color: s.color }))}
+          />
         </div>
 
         {/* Right: Tab-specific Content */}
@@ -266,9 +241,9 @@ export default async function StudentDetailPage({
                         <span className="text-[13px] text-eo-text-secondary w-[100px]">
                           {assessment?.date ?? "-"}
                         </span>
-                        <span className="text-[13px] font-medium text-eo-text-primary flex-1 truncate pr-2">
+                        <Link href={`/assessments/${assessment?.id ?? ""}`} className="text-[13px] font-medium text-eo-text-primary flex-1 truncate pr-2 hover:text-eo-primary">
                           {assessment?.name ?? "-"}
-                        </span>
+                        </Link>
                         <div className="w-[80px]">
                           <span
                             className="text-[11px] font-medium px-1.5 py-0.5 rounded"
@@ -383,76 +358,19 @@ export default async function StudentDetailPage({
 
           {/* ── 과제 tab ── */}
           {activeTab === "assignments" && (
-            <>
-              <span className="text-base font-bold text-eo-text-primary">
-                과제 현황
-              </span>
-              <div className="bg-white rounded-xl border border-eo-border overflow-hidden">
-                <div className="flex items-center px-4 py-2.5 bg-eo-bg-surface border-b border-eo-border">
-                  <span className="text-xs font-semibold text-eo-text-secondary flex-1">
-                    과제명
-                  </span>
-                  <span className="text-xs font-semibold text-eo-text-secondary w-[80px]">
-                    과목
-                  </span>
-                  <span className="text-xs font-semibold text-eo-text-secondary w-[100px]">
-                    마감일
-                  </span>
-                  <span className="text-xs font-semibold text-eo-text-secondary w-[90px]">
-                    상태
-                  </span>
-                  <span className="text-xs font-semibold text-eo-text-secondary flex-1">
-                    피드백
-                  </span>
-                </div>
-                {assignments.length > 0 ? (
-                  assignments.map((a, i) => {
-                    const assignment = a.assignments;
-                    const subjectName = assignment?.subjects?.name ?? "-";
-                    const subjectColor =
-                      assignment?.subjects?.color ?? "#6B7280";
-                    return (
-                      <div
-                        key={a.id}
-                        className={`flex items-center px-4 py-2.5 ${
-                          i < assignments.length - 1
-                            ? "border-b border-eo-border"
-                            : ""
-                        }`}
-                      >
-                        <span className="text-[13px] font-medium text-eo-text-primary flex-1 truncate pr-2">
-                          {assignment?.title ?? "-"}
-                        </span>
-                        <div className="w-[80px]">
-                          <span
-                            className="text-[11px] font-medium px-1.5 py-0.5 rounded"
-                            style={{
-                              backgroundColor: `${subjectColor}20`,
-                              color: subjectColor,
-                            }}
-                          >
-                            {subjectName}
-                          </span>
-                        </div>
-                        <span className="text-[13px] text-eo-text-secondary w-[100px]">
-                          {assignment?.due_date ?? "-"}
-                        </span>
-                        <div className="w-[90px]">
-                          <AssignmentStatusBadge status={a.status} />
-                        </div>
-                        <span className="text-[13px] text-eo-text-secondary flex-1 truncate">
-                          {a.feedback ?? "-"}
-                        </span>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="flex items-center justify-center py-12 text-sm text-eo-text-secondary">
-                    과제 기록이 없습니다.
-                  </div>
-                )}
-              </div>
-            </>
+            <StudentAssignmentsTab
+              studentId={id}
+              assignments={assignments.map((a) => ({
+                assignmentId: a.assignment_id,
+                status: a.status,
+                feedback: a.feedback,
+                submittedAt: a.submitted_at,
+                title: a.assignments?.title ?? "-",
+                subjectName: a.assignments?.subjects?.name ?? "-",
+                subjectColor: a.assignments?.subjects?.color ?? "#6B7280",
+                dueDate: a.assignments?.due_date ?? "-",
+              }))}
+            />
           )}
 
           {/* ── 분석 tab ── */}

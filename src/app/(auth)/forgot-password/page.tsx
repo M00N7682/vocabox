@@ -12,9 +12,11 @@ export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setLoading(true);
     setError(null);
+    const formData = new FormData(e.currentTarget);
     const result = await resetPassword(formData);
     if (result?.error) {
       setError(result.error);
@@ -76,7 +78,7 @@ export default function ForgotPasswordPage() {
             </Link>
           </div>
         ) : (
-          <form action={handleSubmit} className="flex flex-col gap-8 w-full">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-8 w-full">
             <div className="flex flex-col gap-2">
               <h1 className="text-[28px] font-bold text-[#111827]">
                 비밀번호 재설정

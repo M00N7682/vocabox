@@ -94,14 +94,57 @@ export async function getAssessmentScores(
 ): Promise<AssessmentScoreWithStudent[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // 1. Get the assessment to know which subject it belongs to
+  const { data: assessment } = await supabase
+    .from("assessments")
+    .select("subject_id")
+    .eq("id", assessmentId)
+    .single();
+
+  // 2. Get existing scores
+  const { data: existingScores, error } = await supabase
     .from("assessment_scores")
     .select("*, students(id, name)")
     .eq("assessment_id", assessmentId)
     .order("created_at");
 
   if (error) throw error;
-  return (data as unknown as AssessmentScoreWithStudent[]) ?? [];
+
+  const scores = (existingScores as unknown as AssessmentScoreWithStudent[]) ?? [];
+
+  // 3. If the assessment has a subject, fetch enrolled students and fill in missing ones
+  if (assessment?.subject_id) {
+    const { data: enrolled } = await supabase
+      .from("subject_students")
+      .select("student_id, students(id, name)")
+      .eq("subject_id", assessment.subject_id);
+
+    if (enrolled) {
+      const existingStudentIds = new Set(scores.map((s) => s.student_id));
+      const missingStudents = enrolled.filter(
+        (e) => !existingStudentIds.has(e.student_id)
+      );
+
+      for (const ms of missingStudents) {
+        const student = ms.students as unknown as { id: string; name: string } | null;
+        scores.push({
+          id: "",
+          assessment_id: assessmentId,
+          student_id: ms.student_id,
+          score: null,
+          grade_value: null,
+          check_value: null,
+          status: "응시",
+          note: null,
+          recorded_by: null,
+          created_at: "",
+          students: student,
+        });
+      }
+    }
+  }
+
+  return scores;
 }
 
 export async function getAssessmentScoresByStudent(studentId: string) {
@@ -146,9 +189,14 @@ export async function createAssessment(formData: FormData) {
   const parsed = validate(createAssessmentSchema, formDataToObject(formData));
   if (!parsed.success) return { error: parsed.error };
 
-  const chapterIds: string[] = parsed.data.chapter_ids
-    ? JSON.parse(parsed.data.chapter_ids)
-    : [];
+  let chapterIds: string[] = [];
+  if (parsed.data.chapter_ids) {
+    try {
+      chapterIds = JSON.parse(parsed.data.chapter_ids);
+    } catch {
+      return { error: "단원 ID 형식이 올바르지 않습니다." };
+    }
+  }
 
   const { data: assessment, error } = await supabase
     .from("assessments")
@@ -173,7 +221,10 @@ export async function createAssessment(formData: FormData) {
   if (error) return { error: error.message };
 
   if (chapterIds.length > 0 && assessment) {
-    await linkChapters(assessment.id, chapterIds);
+    const linkResult = await linkChapters(assessment.id, chapterIds);
+    if (linkResult?.error) {
+      return { error: `평가는 생성되었으나 단원 연결 실패: ${linkResult.error}` };
+    }
   }
 
   revalidatePath("/assessments");
@@ -184,9 +235,14 @@ export async function updateAssessment(id: string, formData: FormData) {
   const supabase = await createClient();
 
   const chapterIdsRaw = formData.get("chapter_ids");
-  const chapterIds: string[] = chapterIdsRaw
-    ? JSON.parse(chapterIdsRaw as string)
-    : [];
+  let chapterIds: string[] = [];
+  if (chapterIdsRaw) {
+    try {
+      chapterIds = JSON.parse(chapterIdsRaw as string);
+    } catch {
+      return { error: "단원 ID 형식이 올바르지 않습니다." };
+    }
+  }
 
   const textbookId = (formData.get("textbook_id") as string) || null;
   const templateId = (formData.get("template_id") as string) || null;
@@ -209,7 +265,10 @@ export async function updateAssessment(id: string, formData: FormData) {
   if (date) updatePayload.date = date;
 
   const totalPoints = formData.get("total_points");
-  if (totalPoints !== null) updatePayload.total_points = Number(totalPoints);
+  if (totalPoints !== null && totalPoints !== "") {
+    const num = Number(totalPoints);
+    if (!isNaN(num) && num > 0) updatePayload.total_points = num;
+  }
 
   const scoringMethod = formData.get("scoring_method") as string | null;
   if (scoringMethod) updatePayload.scoring_method = scoringMethod;
@@ -218,7 +277,10 @@ export async function updateAssessment(id: string, formData: FormData) {
   if (isPublicRaw !== null) updatePayload.is_public = isPublicRaw === "true";
 
   const weight = formData.get("weight");
-  if (weight !== null) updatePayload.weight = Number(weight);
+  if (weight !== null && weight !== "") {
+    const num = Number(weight);
+    if (!isNaN(num) && num >= 0) updatePayload.weight = num;
+  }
 
   const status = formData.get("status") as string | null;
   if (status) updatePayload.status = status;
@@ -232,7 +294,10 @@ export async function updateAssessment(id: string, formData: FormData) {
 
   // Re-sync chapter links when chapter_ids is explicitly provided
   if (formData.has("chapter_ids")) {
-    await linkChapters(id, chapterIds);
+    const linkResult = await linkChapters(id, chapterIds);
+    if (linkResult?.error) {
+      return { error: `평가는 수정되었으나 단원 연결 실패: ${linkResult.error}` };
+    }
   }
 
   revalidatePath("/assessments");

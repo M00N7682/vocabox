@@ -4,6 +4,7 @@ import { SearchInput } from "@/components/shared/search-input";
 import { getRiskAlerts } from "@/lib/actions/risk-alerts";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 import { RiskResolveButton } from "./resolve-button";
+import Link from "next/link";
 
 const riskStyles: Record<string, { bg: string; text: string; label: string }> = {
   concern: { bg: "bg-[#FEF3C7]", text: "text-[#92400E]", label: "관심" },
@@ -53,7 +54,7 @@ export default async function RiskAlertsPage({
               <div className="flex flex-col gap-3 flex-1">
                 <div className="flex items-center gap-3">
                   <span className={`text-xs font-bold px-2.5 py-1 rounded ${style.bg} ${style.text}`}>{style.label}</span>
-                  <span className="text-base font-bold text-eo-text-primary">{alert.students?.name ?? "-"}</span>
+                  <Link href={`/students/${alert.student_id}`} className="text-base font-bold text-eo-text-primary hover:text-eo-primary">{alert.students?.name ?? "-"}</Link>
                   <span className="text-[13px] text-eo-text-secondary">{alert.students?.school ?? ""} {alert.students?.grade ?? ""}</span>
                   {alert.is_resolved && <CheckCircle className="w-4 h-4 text-eo-success ml-auto" />}
                 </div>

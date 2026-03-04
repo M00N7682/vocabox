@@ -2,11 +2,13 @@ import { PageHeader } from "@/components/shared/page-header";
 import { ClassesClient } from "@/components/classes/classes-client";
 import { getClasses } from "@/lib/actions/classes";
 import { getSubjects } from "@/lib/actions/subjects";
+import { getStudents } from "@/lib/actions/students";
 
 export default async function ClassesPage() {
-  const [classes, subjects] = await Promise.all([
+  const [classes, subjects, allStudents] = await Promise.all([
     getClasses(),
     getSubjects(),
+    getStudents({ activeOnly: true }),
   ]);
 
   return (
@@ -18,6 +20,7 @@ export default async function ClassesPage() {
       <ClassesClient
         classes={classes}
         subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
+        students={allStudents.map((s) => ({ id: s.id, name: s.name, grade: s.grade }))}
       />
     </div>
   );

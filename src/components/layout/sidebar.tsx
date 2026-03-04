@@ -102,9 +102,13 @@ export function Sidebar() {
                     <Icon className="w-[18px] h-[18px] shrink-0" />
                     <span>{item.label}</span>
                     {showBadge && (
-                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-[#EF4444] text-white text-[10px] font-bold">
+                      <Link
+                        href="/analytics/risks"
+                        onClick={(e) => e.stopPropagation()}
+                        className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-[#EF4444] text-white text-[10px] font-bold hover:bg-[#DC2626] transition-colors"
+                      >
                         {riskCount > 99 ? "99+" : riskCount}
-                      </span>
+                      </Link>
                     )}
                   </Link>
                 );

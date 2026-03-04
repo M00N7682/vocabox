@@ -4,6 +4,7 @@ import { FilterDropdown } from "@/components/shared/filter-dropdown";
 import { SearchInput } from "@/components/shared/search-input";
 import { Bell } from "lucide-react";
 import { Suspense } from "react";
+import Link from "next/link";
 
 const typeOptions = [
   { value: "attendance", label: "출결" },
@@ -122,9 +123,15 @@ async function NotificationsTable({
             <span className="text-[13px] text-eo-text-secondary w-[200px] truncate pr-2">
               {n.message}
             </span>
-            <span className="text-[13px] text-eo-text-secondary w-[100px] truncate">
-              {n.students?.name ?? "-"}
-            </span>
+            <div className="w-[100px]">
+              {n.student_id ? (
+                <Link href={`/students/${n.student_id}`} className="text-[13px] text-eo-text-secondary hover:text-eo-primary truncate">
+                  {n.students?.name ?? "-"}
+                </Link>
+              ) : (
+                <span className="text-[13px] text-eo-text-secondary">-</span>
+              )}
+            </div>
             <span className="text-[13px] text-eo-text-secondary w-[70px]">
               {channelLabels[n.channel] ?? n.channel}
             </span>

@@ -147,6 +147,7 @@ export async function getWeakAreas(filters?: {
 
   for (const s of scores) {
     if (!s.assessments) continue;
+    if (!s.assessments.total_points) continue;
     const pct = (s.score / s.assessments.total_points) * 100;
     if (pct < 70) {
       const key = s.assessments.name;

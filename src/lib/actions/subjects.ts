@@ -224,6 +224,7 @@ export async function addStudentToSubject(
   if (error) return { error: error.message };
 
   revalidatePath("/subjects");
+  revalidatePath("/students");
   return { success: true };
 }
 
@@ -242,5 +243,6 @@ export async function removeStudentFromSubject(
   if (error) return { error: error.message };
 
   revalidatePath("/subjects");
+  revalidatePath("/students");
   return { success: true };
 }

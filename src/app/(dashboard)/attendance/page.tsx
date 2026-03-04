@@ -4,6 +4,7 @@ import { getAttendance, getAttendanceSummary } from "@/lib/actions/attendance";
 import { getSubjects } from "@/lib/actions/subjects";
 import { SearchInput } from "@/components/shared/search-input";
 import { FilterDropdown } from "@/components/shared/filter-dropdown";
+import Link from "next/link";
 
 const statusStyles: Record<string, string> = {
   출석: "bg-[#ECFDF5] text-[#10B981]",
@@ -228,7 +229,7 @@ export default async function AttendancePage({
                 i < records.length - 1 ? "border-b border-eo-border" : ""
               }`}
             >
-              <div className="flex items-center gap-2.5 w-[200px]">
+              <Link href={`/students/${r.student_id}`} className="flex items-center gap-2.5 w-[200px] hover:opacity-80">
                 <div
                   className={`flex items-center justify-center w-7 h-7 rounded-full ${avatar.bg}`}
                 >
@@ -236,10 +237,10 @@ export default async function AttendancePage({
                     {initial}
                   </span>
                 </div>
-                <span className="text-[13px] font-medium text-eo-text-primary">
+                <span className="text-[13px] font-medium text-eo-text-primary hover:text-eo-primary">
                   {name}
                 </span>
-              </div>
+              </Link>
 
               <span className="flex-1 text-[13px] text-eo-text-secondary">
                 {r.subjects?.name ?? "-"}

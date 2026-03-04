@@ -2,9 +2,11 @@ import { PageHeader } from "@/components/shared/page-header";
 import { AssignmentAddButton } from "@/components/assignments/assignment-add-button";
 import { getAssignments } from "@/lib/actions/assignments";
 import { getSubjects } from "@/lib/actions/subjects";
+import { getStudents } from "@/lib/actions/students";
 import { SearchInput } from "@/components/shared/search-input";
 import { FilterDropdown } from "@/components/shared/filter-dropdown";
 import type { AssignmentWithDetails } from "@/lib/actions/assignments";
+import Link from "next/link";
 
 const submissionTypeLabel: Record<string, string> = {
   photo: "사진",
@@ -77,12 +79,13 @@ export default async function AssignmentsPage({
 }) {
   const params = await searchParams;
 
-  const [assignments, subjects] = await Promise.all([
+  const [assignments, subjects, students] = await Promise.all([
     getAssignments({
       subjectId: params.subject,
       search: params.search,
     }),
     getSubjects({ isActive: true }),
+    getStudents({ activeOnly: true }),
   ]);
 
   const subjectOptions = subjects.map((s) => ({
@@ -97,7 +100,12 @@ export default async function AssignmentsPage({
         description="학생 과제를 관리하고 제출 현황을 확인합니다"
       >
         <AssignmentAddButton
-          subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
+          subjects={subjects.map((s) => ({
+            id: s.id,
+            name: s.name,
+            studentIds: (s.subject_students ?? []).map((ss: { student_id: string }) => ss.student_id),
+          }))}
+          students={students.map((s) => ({ id: s.id, name: s.name, grade: s.grade }))}
         />
       </PageHeader>
 
@@ -166,9 +174,10 @@ export default async function AssignmentsPage({
             : { label: "-", isOverdue: false };
 
           return (
-            <div
+            <Link
               key={a.id}
-              className={`flex items-center px-5 py-3 ${
+              href={`/assignments/${a.id}`}
+              className={`flex items-center px-5 py-3 hover:bg-eo-bg-surface transition-colors cursor-pointer ${
                 i < assignments.length - 1 ? "border-b border-eo-border" : ""
               }`}
             >
@@ -231,7 +240,7 @@ export default async function AssignmentsPage({
                   </span>
                 )}
               </div>
-            </div>
+            </Link>
           );
         })}
 

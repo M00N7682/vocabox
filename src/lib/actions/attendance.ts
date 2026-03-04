@@ -222,7 +222,7 @@ export async function checkInByPin(pinCode: string, subjectId: string) {
 
   // Verify the student is enrolled in the subject
   const { data: enrollment, error: enrollmentError } = await supabase
-    .from("subject_enrollments")
+    .from("subject_students")
     .select("id")
     .eq("student_id", student.id)
     .eq("subject_id", subjectId)

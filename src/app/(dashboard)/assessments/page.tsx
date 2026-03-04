@@ -171,23 +171,19 @@ export default async function AssessmentsPage({
           const subjectColor = a.subjects?.color ?? "#6B7280";
 
           return (
-            <div
+            <Link
               key={a.id}
-              className={`flex items-center px-5 py-3 hover:bg-eo-bg-page/50 transition-colors ${
+              href={`/assessments/${a.id}`}
+              className={`flex items-center px-5 py-3 hover:bg-eo-bg-page/50 transition-colors cursor-pointer ${
                 i < assessments.length - 1 ? "border-b border-eo-border" : ""
               }`}
             >
               <span className="w-[80px] text-[13px] text-eo-text-secondary">
                 {dateStr}
               </span>
-              <div className="flex-1">
-                <Link
-                  href={`/scores?assessment=${a.id}`}
-                  className="text-[13px] font-medium text-eo-text-primary hover:text-eo-primary hover:underline transition-colors"
-                >
-                  {a.name}
-                </Link>
-              </div>
+              <span className="flex-1 text-[13px] font-medium text-eo-text-primary">
+                {a.name}
+              </span>
               <div className="w-[90px]">
                 <span
                   className="text-[11px] font-medium px-1.5 py-0.5 rounded"
@@ -222,7 +218,7 @@ export default async function AssessmentsPage({
                   {a.status}
                 </span>
               </div>
-            </div>
+            </Link>
           );
         })}
 

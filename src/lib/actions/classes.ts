@@ -96,6 +96,7 @@ export async function addStudentToClass(classId: string, studentId: string) {
   if (error) return { error: error.message };
 
   revalidatePath("/classes");
+  revalidatePath("/students");
   return { success: true };
 }
 
@@ -114,5 +115,6 @@ export async function removeStudentFromClass(
   if (error) return { error: error.message };
 
   revalidatePath("/classes");
+  revalidatePath("/students");
   return { success: true };
 }

@@ -92,9 +92,12 @@ export async function getStudents(options?: {
   }
 
   if (options?.search) {
-    query = query.or(
-      `name.ilike.%${options.search}%,english_name.ilike.%${options.search}%`
-    );
+    const sanitized = options.search.replace(/[%,().]/g, "");
+    if (sanitized) {
+      query = query.or(
+        `name.ilike.%${sanitized}%,english_name.ilike.%${sanitized}%`
+      );
+    }
   }
 
   const { data, error } = await query;

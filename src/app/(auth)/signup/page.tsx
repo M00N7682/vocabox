@@ -12,7 +12,9 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     const password = formData.get("password") as string;
     const confirm = formData.get("passwordConfirm") as string;
 
@@ -61,7 +63,7 @@ export default function SignupPage() {
 
       {/* Right - Signup Form */}
       <div className="flex items-center justify-center w-[520px] bg-white px-[60px] py-12 overflow-y-auto">
-        <form action={handleSubmit} className="flex flex-col gap-6 w-full">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
           <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-bold text-eo-text-primary">
               회원가입

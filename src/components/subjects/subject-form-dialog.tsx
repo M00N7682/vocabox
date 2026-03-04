@@ -30,26 +30,34 @@ type Props = {
 
 export function SubjectFormDialog({ open, onClose, subject, teachers }: Props) {
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const isEdit = !!subject;
 
   if (!open) return null;
 
   function handleSubmit(formData: FormData) {
+    setError(null);
     startTransition(async () => {
-      if (isEdit) {
-        await updateSubject(subject!.id, formData);
+      const result = isEdit
+        ? await updateSubject(subject!.id, formData)
+        : await createSubject(formData);
+      if (result?.error) {
+        setError(result.error);
       } else {
-        await createSubject(formData);
+        onClose();
       }
-      onClose();
     });
   }
 
   function handleDelete() {
     if (!subject || !confirm("이 과목을 삭제하시겠습니까?")) return;
     startTransition(async () => {
-      await deleteSubject(subject.id);
-      onClose();
+      const result = await deleteSubject(subject.id);
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        onClose();
+      }
     });
   }
 
@@ -67,6 +75,9 @@ export function SubjectFormDialog({ open, onClose, subject, teachers }: Props) {
           </div>
 
           <div className="flex flex-col gap-4 px-6 py-5">
+            {error && (
+              <div className="p-3 rounded-lg bg-red-50 text-sm text-eo-danger">{error}</div>
+            )}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-eo-text-primary">과목명 *</label>
               <Input name="name" defaultValue={subject?.name ?? ""} placeholder="예: 영어, 수학" required />

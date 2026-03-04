@@ -9,11 +9,18 @@ import { createStudent } from "@/lib/actions/students";
 export function StudentAddButton() {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   function handleSubmit(formData: FormData) {
+    setError(null);
     startTransition(async () => {
-      await createStudent(formData);
-      setOpen(false);
+      const result = await createStudent(formData);
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        setOpen(false);
+        setError(null);
+      }
     });
   }
 
@@ -51,6 +58,9 @@ export function StudentAddButton() {
               </div>
 
               <div className="flex flex-col gap-4 px-6 py-5">
+                {error && (
+                  <div className="p-3 rounded-lg bg-red-50 text-sm text-eo-danger">{error}</div>
+                )}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-eo-text-primary">
                     이름 *

@@ -14,9 +14,11 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(callbackError);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setLoading(true);
     setError(null);
+    const formData = new FormData(e.currentTarget);
     const result = await login(formData);
     if (result?.error) {
       setError(result.error);
@@ -51,7 +53,7 @@ export default function LoginPage() {
 
       {/* Right - Login Form */}
       <div className="flex items-center justify-center w-[520px] bg-white px-[60px] py-12">
-        <form action={handleSubmit} className="flex flex-col gap-8 w-full">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-8 w-full">
           <div className="flex flex-col gap-2">
             <h1 className="text-[28px] font-bold text-[#111827]">로그인</h1>
             <p className="text-[15px] text-[#6B7280]">

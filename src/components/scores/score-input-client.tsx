@@ -55,6 +55,7 @@ export function ScoreInputClient({ assessmentId, totalPoints, scoringMethod, sco
     }))
   );
   const [isPending, startTransition] = useTransition();
+  const [saveResult, setSaveResult] = useState<{ success?: boolean; error?: string } | null>(null);
 
   function updateField<K extends keyof (typeof scores)[0]>(index: number, key: K, value: (typeof scores)[0][K]) {
     setScores((prev) => prev.map((s, i) => (i === index ? { ...s, [key]: value } : s)));
@@ -72,8 +73,9 @@ export function ScoreInputClient({ assessmentId, totalPoints, scoringMethod, sco
   }
 
   function handleSave() {
+    setSaveResult(null);
     startTransition(async () => {
-      await saveAssessmentScores(
+      const result = await saveAssessmentScores(
         assessmentId,
         scores.map((s) => ({
           student_id: s.student_id,
@@ -84,6 +86,12 @@ export function ScoreInputClient({ assessmentId, totalPoints, scoringMethod, sco
           note: s.note || undefined,
         }))
       );
+      if (result?.error) {
+        setSaveResult({ error: result.error });
+      } else {
+        setSaveResult({ success: true });
+        setTimeout(() => setSaveResult(null), 3000);
+      }
     });
   }
 
@@ -118,6 +126,12 @@ export function ScoreInputClient({ assessmentId, totalPoints, scoringMethod, sco
           <span className="text-sm font-semibold text-eo-primary">{completedCount}/{scores.length}명</span>
         </div>
         <div className="ml-auto flex gap-2">
+          {saveResult?.error && (
+            <span className="text-sm text-eo-danger">{saveResult.error}</span>
+          )}
+          {saveResult?.success && (
+            <span className="text-sm text-eo-success font-medium">저장 완료!</span>
+          )}
           <Button
             onClick={handleSave}
             disabled={isPending}

@@ -78,23 +78,43 @@ export async function createAssignment(formData: FormData) {
   const isRequired =
     parsed.data.is_required === "true" || parsed.data.is_required === "1" ? true : false;
 
-  const { error } = await supabase.from("assignments").insert({
-    academy_id: profile.academy_id,
-    title: parsed.data.title,
-    subject_id: parsed.data.subject_id,
-    chapter_id: parsed.data.chapter_id || null,
-    description: parsed.data.description || null,
-    due_date: parsed.data.due_date,
-    submission_type: parsed.data.submission_type || "check",
-    difficulty: parsed.data.difficulty || null,
-    is_required: isRequired,
-    created_by: profile.id,
-  });
+  const { data: inserted, error } = await supabase
+    .from("assignments")
+    .insert({
+      academy_id: profile.academy_id,
+      title: parsed.data.title,
+      subject_id: parsed.data.subject_id,
+      chapter_id: parsed.data.chapter_id || null,
+      description: parsed.data.description || null,
+      due_date: parsed.data.due_date,
+      submission_type: parsed.data.submission_type || "check",
+      difficulty: parsed.data.difficulty || null,
+      is_required: isRequired,
+      created_by: profile.id,
+    })
+    .select("id")
+    .single();
 
   if (error) return { error: error.message };
 
+  // Auto-assign students if student_ids provided
+  const studentIds = formData.getAll("student_ids") as string[];
+  if (inserted && studentIds.length > 0) {
+    const rows = studentIds.map((studentId) => ({
+      assignment_id: inserted.id,
+      student_id: studentId,
+      status: "pending" as const,
+    }));
+    const { error: upsertError } = await supabase
+      .from("assignment_students")
+      .upsert(rows, { onConflict: "assignment_id,student_id" });
+    if (upsertError) {
+      return { error: `과제는 생성되었으나 학생 배정 실패: ${upsertError.message}` };
+    }
+  }
+
   revalidatePath("/assignments");
-  return { success: true };
+  return { success: true, assignmentId: inserted?.id };
 }
 
 export async function updateAssignment(id: string, formData: FormData) {
@@ -214,7 +234,7 @@ export async function getAssignmentStats(): Promise<{
 }> {
   const supabase = await createClient();
 
-  const now = new Date().toISOString();
+  const today = new Date().toISOString().split("T")[0];
 
   const { data: assignments, error: assignmentsError } = await supabase
     .from("assignments")
@@ -224,7 +244,7 @@ export async function getAssignmentStats(): Promise<{
 
   const total = assignments?.length ?? 0;
   const overdueCount =
-    assignments?.filter((a) => a.due_date < now).length ?? 0;
+    assignments?.filter((a) => a.due_date < today).length ?? 0;
 
   const { data: studentRows, error: studentRowsError } = await supabase
     .from("assignment_students")

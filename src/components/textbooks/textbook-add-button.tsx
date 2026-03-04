@@ -15,17 +15,23 @@ type Props = {
 export function TextbookAddButton({ subjects, academyId }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdf = usePdfUpload(academyId);
 
   function handleSubmit(formData: FormData) {
+    setError(null);
     if (pdf.storagePath) {
       formData.set("pdf_url", pdf.storagePath);
     }
     startTransition(async () => {
-      await createTextbook(formData);
-      pdf.reset();
-      setOpen(false);
+      const result = await createTextbook(formData);
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        pdf.reset();
+        setOpen(false);
+      }
     });
   }
 
@@ -79,6 +85,9 @@ export function TextbookAddButton({ subjects, academyId }: Props) {
               </div>
 
               <div className="flex flex-col gap-4 px-6 py-5">
+                {error && (
+                  <div className="p-3 rounded-lg bg-red-50 text-sm text-eo-danger">{error}</div>
+                )}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-eo-text-primary">
                     교재명 *

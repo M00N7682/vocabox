@@ -12,7 +12,9 @@ export default function ResetPasswordPage() {
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     const password = formData.get("password") as string;
     const confirm = formData.get("passwordConfirm") as string;
 
@@ -85,7 +87,7 @@ export default function ResetPasswordPage() {
             </Link>
           </div>
         ) : (
-          <form action={handleSubmit} className="flex flex-col gap-8 w-full">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-8 w-full">
             <div className="flex flex-col gap-2">
               <h1 className="text-[28px] font-bold text-[#111827]">
                 새 비밀번호 설정
