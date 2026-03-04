@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Search, ChevronDown, ChevronRight, FileText } from "lucide-react";
+import { Search, ChevronDown, ChevronRight, FileText, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createChapter, getTextbookPdfUrl } from "@/lib/actions/textbooks";
+import { createChapter, updateTextbook, deleteTextbook, getTextbookPdfUrl } from "@/lib/actions/textbooks";
 import type { ChapterWithChildren, TextbookWithSubject } from "@/lib/actions/textbooks";
 
 type Props = {
   textbooks: TextbookWithSubject[];
   chaptersMap: Record<string, ChapterWithChildren[]>;
+  subjects: { id: string; name: string }[];
 };
 
 type RightView = "chapters" | "pdf";
@@ -20,11 +21,12 @@ const statusConfig: Record<string, { color: string; dotColor: string }> = {
   미진행: { color: "text-eo-text-secondary", dotColor: "bg-[#E5E7EB]" },
 };
 
-export function TextbooksClient({ textbooks, chaptersMap }: Props) {
+export function TextbooksClient({ textbooks, chaptersMap, subjects }: Props) {
   const [activeId, setActiveId] = useState<string>(textbooks[0]?.id ?? "");
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [chapterDialogOpen, setChapterDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const [rightView, setRightView] = useState<RightView>("chapters");
@@ -166,7 +168,17 @@ export function TextbooksClient({ textbooks, chaptersMap }: Props) {
           <>
             <div className="flex items-center justify-between">
               <div className="flex flex-col gap-1">
-                <span className="text-base font-bold text-eo-text-primary">{activeTextbook.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-eo-text-primary">{activeTextbook.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => setEditDialogOpen(true)}
+                    className="p-1 rounded hover:bg-eo-bg-surface text-eo-text-secondary hover:text-eo-primary transition-colors"
+                    title="교재 수정"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                </div>
                 <span className="text-[13px] text-eo-text-secondary">
                   {activeTextbook.subjects?.name ?? "-"} · {activeTextbook.year} · {activeTextbook.grade ?? "-"} · 전체 {overallProgress.total}단원
                 </span>
@@ -294,6 +306,110 @@ export function TextbooksClient({ textbooks, chaptersMap }: Props) {
           <span className="text-sm text-eo-text-secondary">교재를 선택해주세요.</span>
         )}
       </div>
+
+      {/* Edit Textbook Dialog */}
+      {editDialogOpen && activeTextbook && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setEditDialogOpen(false)}
+        >
+          <div
+            className="bg-white rounded-xl w-[480px] max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <form
+              action={(formData) => {
+                startTransition(async () => {
+                  const result = await updateTextbook(activeTextbook.id, formData);
+                  if (!result?.error) {
+                    setEditDialogOpen(false);
+                  }
+                });
+              }}
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-eo-border">
+                <h2 className="text-lg font-bold text-eo-text-primary">교재 수정</h2>
+                <button
+                  type="button"
+                  onClick={() => setEditDialogOpen(false)}
+                  className="text-eo-text-secondary hover:text-eo-text-primary"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-4 px-6 py-5">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-eo-text-primary">교재명 *</label>
+                  <Input name="name" defaultValue={activeTextbook.name} required />
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <label className="text-sm font-medium text-eo-text-primary">과목 *</label>
+                    <select
+                      name="subject_id"
+                      defaultValue={activeTextbook.subject_id ?? ""}
+                      className="h-10 px-3 rounded-lg border border-eo-border text-sm"
+                      required
+                    >
+                      <option value="">선택</option>
+                      {subjects.map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <label className="text-sm font-medium text-eo-text-primary">학년</label>
+                    <Input name="grade" defaultValue={activeTextbook.grade ?? ""} placeholder="예: 중2" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-eo-text-primary">연도</label>
+                  <Input type="number" name="year" defaultValue={activeTextbook.year ?? new Date().getFullYear()} />
+                </div>
+
+                {activeTextbook.pdf_url && (
+                  <input type="hidden" name="pdf_url" value={activeTextbook.pdf_url} />
+                )}
+              </div>
+
+              <div className="flex items-center justify-between px-6 py-4 border-t border-eo-border">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm(`"${activeTextbook.name}" 교재를 삭제하시겠습니까? 모든 단원 데이터가 삭제됩니다.`)) {
+                      startTransition(async () => {
+                        await deleteTextbook(activeTextbook.id);
+                        setEditDialogOpen(false);
+                        setActiveId(textbooks.find((t) => t.id !== activeTextbook.id)?.id ?? "");
+                      });
+                    }
+                  }}
+                  disabled={isPending}
+                  className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  삭제
+                </button>
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                    취소
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isPending}
+                    className="bg-eo-primary hover:bg-[#4338CA] text-white"
+                  >
+                    {isPending ? "저장중..." : "저장"}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {chapterDialogOpen && activeTextbook && (
         <div

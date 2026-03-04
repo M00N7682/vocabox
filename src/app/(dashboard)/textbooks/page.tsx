@@ -37,7 +37,11 @@ export default async function TextbooksPage() {
       </PageHeader>
 
       {textbooks.length > 0 ? (
-        <TextbooksClient textbooks={textbooks} chaptersMap={chaptersMap} />
+        <TextbooksClient
+          textbooks={textbooks}
+          chaptersMap={chaptersMap}
+          subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
+        />
       ) : (
         <div className="flex items-center justify-center py-20 text-sm text-eo-text-secondary">
           등록된 교재가 없습니다. 교재를 추가해주세요.
