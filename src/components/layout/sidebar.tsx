@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   BookOpen,
@@ -59,16 +58,8 @@ const navSections = [
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ riskCount = 0 }: { riskCount?: number }) {
   const pathname = usePathname();
-  const [riskCount, setRiskCount] = useState(0);
-
-  useEffect(() => {
-    fetch("/api/risk-count")
-      .then((r) => r.json())
-      .then((d) => setRiskCount(d.count ?? 0))
-      .catch(() => {});
-  }, [pathname]);
 
   return (
     <aside className="flex flex-col w-[260px] h-full bg-eo-bg-sidebar px-5 py-6 shrink-0">
