@@ -107,7 +107,11 @@ export default async function AssessmentsPage({
         description="시험, 퀴즈, 과제 등 평가를 관리합니다"
       >
         <AssessmentAddButton
-          subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
+          subjects={subjects.map((s) => ({
+            id: s.id,
+            name: s.name,
+            studentCount: s.subject_students?.length ?? 0,
+          }))}
         />
       </PageHeader>
 

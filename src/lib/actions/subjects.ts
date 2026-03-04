@@ -211,6 +211,33 @@ export async function deleteSubject(id: string) {
   return { success: true };
 }
 
+export async function getSubjectStudents(
+  subjectIds: string[]
+): Promise<Record<string, { id: string; name: string }[]>> {
+  if (subjectIds.length === 0) return {};
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("subject_students")
+    .select("subject_id, students(id, name)")
+    .in("subject_id", subjectIds);
+
+  if (error) throw error;
+
+  const result: Record<string, { id: string; name: string }[]> = {};
+  for (const id of subjectIds) {
+    result[id] = [];
+  }
+  for (const row of data ?? []) {
+    const student = row.students as unknown as { id: string; name: string } | null;
+    if (student) {
+      result[row.subject_id]?.push(student);
+    }
+  }
+  return result;
+}
+
 export async function addStudentToSubject(
   subjectId: string,
   studentId: string

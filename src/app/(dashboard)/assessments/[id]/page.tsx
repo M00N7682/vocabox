@@ -85,6 +85,7 @@ export default async function AssessmentDetailPage({
 
       <ScoreInputClient
         assessmentId={id}
+        subjectId={assessment.subject_id ?? null}
         totalPoints={assessment.total_points}
         scoringMethod={assessment.scoring_method as "score" | "grade" | "check"}
         scores={scores}

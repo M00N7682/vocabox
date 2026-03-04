@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { Save } from "lucide-react";
+import { Save, Plus, AlertTriangle, Users } from "lucide-react";
 import { saveAssessmentScores } from "@/lib/actions/assessments";
+import { addStudentToSubject } from "@/lib/actions/subjects";
+import Link from "next/link";
 
 type ScoreEntry = {
   student_id: string;
@@ -17,9 +19,11 @@ type ScoreEntry = {
 
 type Props = {
   assessmentId: string;
+  subjectId: string | null;
   totalPoints: number;
   scoringMethod: "score" | "grade" | "check";
   scores: ScoreEntry[];
+  availableStudents?: { id: string; name: string; grade: string | null }[];
 };
 
 const STATUS_OPTIONS = [
@@ -42,7 +46,7 @@ const statusStyles: Record<string, string> = {
   면제: "bg-[#F1F5F9] text-[#6B7280]",
 };
 
-export function ScoreInputClient({ assessmentId, totalPoints, scoringMethod, scores: initialScores }: Props) {
+export function ScoreInputClient({ assessmentId, subjectId, totalPoints, scoringMethod, scores: initialScores, availableStudents = [] }: Props) {
   const [scores, setScores] = useState(
     initialScores.map((s) => ({
       student_id: s.student_id,
@@ -242,11 +246,82 @@ export function ScoreInputClient({ assessmentId, totalPoints, scoringMethod, sco
           );
         })}
         {scores.length === 0 && (
-          <div className="flex items-center justify-center py-12 text-sm text-eo-text-secondary">
-            대상 학생이 없습니다.
-          </div>
+          <EmptyScoresGuide
+            subjectId={subjectId}
+            availableStudents={availableStudents}
+          />
         )}
       </div>
     </>
+  );
+}
+
+function EmptyScoresGuide({
+  subjectId,
+  availableStudents,
+}: {
+  subjectId: string | null;
+  availableStudents: { id: string; name: string; grade: string | null }[];
+}) {
+  const [isPending, startTransition] = useTransition();
+  const [showPicker, setShowPicker] = useState(false);
+
+  if (!subjectId) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 gap-3">
+        <AlertTriangle className="w-8 h-8 text-[#D97706]" />
+        <span className="text-sm font-medium text-eo-text-primary">이 평가에 과목이 지정되지 않았습니다</span>
+        <span className="text-[13px] text-eo-text-secondary">
+          <Link href="/assessments" className="text-eo-primary underline hover:text-[#4338CA]">평가 관리</Link>에서 과목을 지정해주세요.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center py-12 gap-4">
+      <Users className="w-8 h-8 text-eo-text-tertiary" />
+      <div className="text-center">
+        <p className="text-sm font-medium text-eo-text-primary">대상 학생이 없습니다</p>
+        <p className="text-[13px] text-eo-text-secondary mt-1">
+          이 과목에 수강 학생을 배정하면 성적을 입력할 수 있습니다.
+        </p>
+      </div>
+      <div className="flex gap-2">
+        {availableStudents.length > 0 && (
+          <Button
+            onClick={() => setShowPicker(!showPicker)}
+            className="bg-eo-primary hover:bg-[#4338CA] text-white gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            학생 배정하기
+          </Button>
+        )}
+        <Link href="/subjects">
+          <Button variant="outline" className="gap-2">
+            과목 관리에서 배정
+          </Button>
+        </Link>
+      </div>
+      {showPicker && (
+        <div className="w-full max-w-md flex flex-col gap-1 p-3 bg-eo-bg-page rounded-xl border border-eo-border max-h-[300px] overflow-auto">
+          <span className="text-[11px] font-medium text-eo-text-secondary px-2 pb-1">학생을 클릭하면 과목에 배정됩니다 (페이지가 새로고침됩니다)</span>
+          {availableStudents.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => {
+                startTransition(async () => {
+                  await addStudentToSubject(subjectId, s.id);
+                });
+              }}
+              disabled={isPending}
+              className="text-left text-[13px] px-3 py-2 rounded-lg hover:bg-white transition-colors text-eo-text-primary disabled:opacity-50"
+            >
+              {s.name} <span className="text-eo-text-tertiary">{s.grade ?? ""}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

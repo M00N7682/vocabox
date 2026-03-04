@@ -1,7 +1,8 @@
 import { PageHeader } from "@/components/shared/page-header";
 import { AttendanceExportButton } from "@/components/attendance/attendance-export-button";
+import { AttendanceBulkCreate } from "@/components/attendance/attendance-bulk-create";
 import { getAttendance, getAttendanceSummary } from "@/lib/actions/attendance";
-import { getSubjects } from "@/lib/actions/subjects";
+import { getSubjects, getSubjectStudents } from "@/lib/actions/subjects";
 import { SearchInput } from "@/components/shared/search-input";
 import { FilterDropdown } from "@/components/shared/filter-dropdown";
 import Link from "next/link";
@@ -68,6 +69,8 @@ export default async function AttendancePage({
     getSubjects({ isActive: true }),
   ]);
 
+  const subjectStudentsMap = await getSubjectStudents(subjects.map((s) => s.id));
+
   const subjectOptions = subjects.map((s) => ({
     value: s.id,
     label: s.name,
@@ -116,6 +119,15 @@ export default async function AttendancePage({
   return (
     <div className="flex flex-col gap-7 p-10 flex-1 overflow-auto">
       <PageHeader title="출결 관리" description="학생 출결 현황을 관리합니다">
+        <AttendanceBulkCreate
+          subjects={subjects.map((s) => ({
+            id: s.id,
+            name: s.name,
+            color: s.color,
+            studentCount: s.subject_students?.length ?? 0,
+          }))}
+          subjectStudents={subjectStudentsMap}
+        />
         <AttendanceExportButton
           records={records.map((r) => ({
             id: r.id,

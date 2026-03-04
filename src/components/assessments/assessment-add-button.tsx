@@ -1,19 +1,25 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus } from "lucide-react";
+import { Plus, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createAssessment } from "@/lib/actions/assessments";
+import Link from "next/link";
+
+type SubjectWithCount = { id: string; name: string; studentCount: number };
 
 type Props = {
-  subjects: { id: string; name: string }[];
+  subjects: SubjectWithCount[];
 };
 
 export function AssessmentAddButton({ subjects }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState("");
+
+  const selectedSubject = subjects.find((s) => s.id === selectedSubjectId);
 
   function handleSubmit(formData: FormData) {
     setError(null);
@@ -24,6 +30,7 @@ export function AssessmentAddButton({ subjects }: Props) {
       } else {
         setOpen(false);
         setError(null);
+        setSelectedSubjectId("");
       }
     });
   }
@@ -85,14 +92,28 @@ export function AssessmentAddButton({ subjects }: Props) {
                       name="subject_id"
                       className="h-10 px-3 rounded-lg border border-eo-border text-sm"
                       required
+                      value={selectedSubjectId}
+                      onChange={(e) => setSelectedSubjectId(e.target.value)}
                     >
                       <option value="">선택</option>
                       {subjects.map((s) => (
                         <option key={s.id} value={s.id}>
-                          {s.name}
+                          {s.name} ({s.studentCount}명)
                         </option>
                       ))}
                     </select>
+                    {selectedSubject && selectedSubject.studentCount === 0 && (
+                      <div className="flex items-start gap-2 p-2.5 rounded-lg bg-[#FEF3C7] border border-[#FDE68A]">
+                        <AlertTriangle className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
+                        <div className="text-[12px] text-[#92400E]">
+                          이 과목에 수강 학생이 없어 성적 입력이 불가합니다.{" "}
+                          <Link href="/subjects" className="underline font-medium hover:text-[#78350F]" onClick={(e) => e.stopPropagation()}>
+                            과목 관리
+                          </Link>
+                          에서 학생을 먼저 배정해주세요.
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col gap-1.5 flex-1">
                     <label className="text-sm font-medium text-eo-text-primary">
