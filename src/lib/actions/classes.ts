@@ -121,3 +121,16 @@ export async function removeStudentFromClass(
   revalidatePath("/students");
   return { success: true };
 }
+
+export async function deleteClass(id: string) {
+  const supabase = await createClient();
+
+  await supabase.from("class_students").delete().eq("class_id", id);
+
+  const { error } = await supabase.from("classes").delete().eq("id", id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/classes");
+  return { success: true };
+}

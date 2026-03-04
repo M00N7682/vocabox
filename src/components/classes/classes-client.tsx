@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, X, Users } from "lucide-react";
+import { Plus, X, Users, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   createClass,
   updateClass,
+  deleteClass,
   addStudentToClass,
   removeStudentFromClass,
   type ClassWithStudents,
@@ -86,13 +87,26 @@ export function ClassesClient({ classes, subjects, students }: Props) {
                   {cls.description}
                 </span>
               )}
-              <button
-                onClick={() => setStudentManagerOpen(isExpanded ? null : cls.id)}
-                className="flex items-center gap-1.5 text-[12px] font-medium text-eo-primary hover:text-[#4338CA]"
-              >
-                <Users className="w-3.5 h-3.5" />
-                {isExpanded ? "학생 관리 닫기" : "학생 관리"}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setStudentManagerOpen(isExpanded ? null : cls.id)}
+                  className="flex items-center gap-1.5 text-[12px] font-medium text-eo-primary hover:text-[#4338CA]"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  {isExpanded ? "학생 관리 닫기" : "학생 관리"}
+                </button>
+                <button
+                  onClick={() => {
+                    setEditClass(cls);
+                    setDialogOpen(true);
+                  }}
+                  className="flex items-center gap-1 text-[12px] text-eo-text-tertiary hover:text-eo-primary"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  수정
+                </button>
+                <DeleteClassButton classId={cls.id} className={cls.name} />
+              </div>
               {isExpanded && (
                 <ClassStudentManager
                   classId={cls.id}
@@ -190,6 +204,25 @@ function ClassStudentManager({
         </>
       )}
     </div>
+  );
+}
+
+function DeleteClassButton({ classId, className: clsName }: { classId: string; className: string }) {
+  const [isPending, startTransition] = useTransition();
+
+  return (
+    <button
+      onClick={() => {
+        if (confirm(`"${clsName}" 반을 삭제하시겠습니까? 배정된 학생 정보가 해제됩니다.`)) {
+          startTransition(async () => { await deleteClass(classId); });
+        }
+      }}
+      disabled={isPending}
+      className="flex items-center gap-1 text-[12px] text-eo-text-tertiary hover:text-eo-danger"
+    >
+      <Trash2 className="w-3.5 h-3.5" />
+      삭제
+    </button>
   );
 }
 

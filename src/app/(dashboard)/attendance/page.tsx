@@ -163,16 +163,19 @@ export default async function AttendancePage({
           allLabel="상태 전체"
         />
         {/* Date filter */}
-        <form method="GET" className="flex items-center">
+        <form method="GET" className="flex items-center gap-2">
           <input
             type="date"
             name="date"
             defaultValue={params.date ?? ""}
             className="h-9 px-3 rounded-lg border border-eo-border bg-white text-sm text-eo-text-primary focus:outline-none focus:ring-2 focus:ring-eo-primary/20 focus:border-eo-primary"
-            onChange={(e) => {
-              // handled via form submit — for SSR pages the user can press Enter or blur
-            }}
           />
+          <button
+            type="submit"
+            className="h-9 px-3 rounded-lg bg-eo-primary text-white text-sm font-medium hover:bg-[#4338CA]"
+          >
+            조회
+          </button>
         </form>
       </div>
 
@@ -302,8 +305,11 @@ export default async function AttendancePage({
         })}
 
         {records.length === 0 && (
-          <div className="flex items-center justify-center py-12 text-sm text-eo-text-secondary">
-            출결 기록이 없습니다.
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <span className="text-sm text-eo-text-secondary">출결 기록이 없습니다.</span>
+            <span className="text-xs text-eo-text-tertiary">
+              상단의 &quot;일괄 등록&quot; 버튼으로 과목별 출결을 한번에 등록하거나, 학생이 QR/PIN으로 체크인할 수 있습니다.
+            </span>
           </div>
         )}
       </div>

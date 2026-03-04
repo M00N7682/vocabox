@@ -23,7 +23,7 @@ export default async function ScoresPage({
         <PageHeader title="성적 관리" description="평가를 선택하여 성적을 입력합니다" />
         {assessments.length === 0 && hasAny && (
           <div className="p-4 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[13px] text-[#92400E]">
-            진행중인 평가가 없습니다. 아래 최근 평가 목록에서 선택하거나, <Link href="/assessments" className="underline font-medium">평가 관리</Link>에서 상태를 &quot;진행중&quot;으로 변경해주세요.
+            진행중인 평가가 없습니다. 아래 최근 평가 목록에서 선택하거나, <Link href="/assessments" className="underline font-medium">평가 관리</Link> → 평가 클릭 → 상태 배지를 클릭하면 &quot;예정 → 진행중 → 완료&quot;로 변경됩니다.
           </div>
         )}
         <div className="bg-white rounded-xl border border-eo-border overflow-hidden">

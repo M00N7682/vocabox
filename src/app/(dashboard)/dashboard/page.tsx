@@ -65,7 +65,12 @@ export default async function DashboardPage() {
                 <span className={`ml-auto text-[13px] font-semibold ${getScoreColor(r.avg)}`}>평균 {r.avg}점</span>
               </Link>
             )) : (
-              <span className="text-sm text-eo-text-secondary py-4">최근 평가가 없습니다.</span>
+              <div className="flex flex-col items-center gap-2 py-4">
+                <span className="text-sm text-eo-text-secondary">최근 평가가 없습니다.</span>
+                <Link href="/assessments" className="text-xs text-eo-primary hover:text-[#4338CA]">
+                  평가 추가하러 가기 →
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -84,7 +89,12 @@ export default async function DashboardPage() {
                 <span className="text-[13px] text-eo-text-primary">{s.students?.name ?? "-"} — {s.subjects?.name ?? "-"}</span>
               </div>
             )) : (
-              <span className="text-sm text-eo-text-secondary">오늘의 출결 기록이 없습니다.</span>
+              <div className="flex flex-col items-center gap-2 py-4">
+                <span className="text-sm text-eo-text-secondary">오늘의 출결 기록이 없습니다.</span>
+                <Link href="/attendance" className="text-xs text-eo-primary hover:text-[#4338CA]">
+                  출결 관리에서 일괄 등록하기 →
+                </Link>
+              </div>
             )}
           </div>
         </div>

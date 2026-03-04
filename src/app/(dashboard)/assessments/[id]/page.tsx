@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { DeleteAssessmentButton } from "@/components/assessments/delete-assessment-button";
+import { AssessmentStatusToggle } from "@/components/assessments/assessment-status-toggle";
 
 const typeStyles: Record<string, string> = {
   시험: "bg-[#DBEAFE] text-[#1E40AF]",
@@ -68,11 +69,10 @@ export default async function AssessmentDetailPage({
         >
           {assessment.type}
         </span>
-        <span
-          className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusStyles[assessment.status] ?? "bg-[#F1F5F9] text-[#6B7280]"}`}
-        >
-          {assessment.status}
-        </span>
+        <AssessmentStatusToggle
+          assessmentId={id}
+          currentStatus={assessment.status}
+        />
         <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#F1F5F9] text-[#6B7280]">
           {scoringMethodLabel}
         </span>

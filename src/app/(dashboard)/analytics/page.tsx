@@ -45,6 +45,13 @@ export default async function AnalyticsPage({
           ]} />
       </div>
 
+      {/* Data hint */}
+      {chartData.length <= 1 && (
+        <div className="p-4 rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] text-[13px] text-[#1E40AF]">
+          평가 데이터가 충분하지 않아 분석이 제한적입니다. 평가를 3건 이상 등록하고 성적을 입력하면 추이 그래프, 취약 영역, 성장 분석이 더 정확해집니다.
+        </div>
+      )}
+
       {/* Charts Row */}
       <div className="flex gap-5">
         <div className="flex flex-col gap-5 p-6 bg-white rounded-xl border border-eo-border flex-1">
