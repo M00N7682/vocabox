@@ -5,7 +5,7 @@ import { Plus, X, ChevronDown, ChevronRight, BookOpen } from "lucide-react";
 import { linkTextbookToClass, unlinkTextbookFromClass } from "@/lib/actions/textbooks";
 import { updateChapterStatus } from "@/lib/actions/textbooks";
 
-type TextbookItem = { id: string; name: string; year: number; grade: string | null; subjects?: { name: string } | null };
+type TextbookItem = { id: string; name: string; year: number | null; grade: string | null; subjects?: { name: string } | null };
 type ChapterItem = { id: string; title: string; status: string; children?: ChapterItem[] };
 
 type Props = {
@@ -137,7 +137,7 @@ export function ClassTextbooksTab({ classId, linkedTextbooks, chaptersMap }: Pro
                           className="flex items-center gap-2 py-2 cursor-pointer"
                           onClick={() => toggleExpand(ch.id)}
                         >
-                          {ch.children?.length > 0 ? (
+                          {(ch.children?.length ?? 0) > 0 ? (
                             isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4 text-eo-text-secondary" />
                           ) : (
                             <div className="w-4" />

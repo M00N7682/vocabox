@@ -36,7 +36,7 @@ type AssignmentItem = {
   assignment_students?: AssignmentStudent[];
 };
 type AttendanceItem = { student_id: string; date: string; status: string };
-type TextbookItem = { id: string; name: string; year: number; grade: string | null; subjects?: { name: string } | null };
+type TextbookItem = { id: string; name: string; year: number | null; grade: string | null; subjects?: { name: string } | null };
 type ChapterItem = { id: string; title: string; status: string; children?: ChapterItem[] };
 type QuickRecordItem = { student_id: string; record_date: string; category: string; value: string | null };
 
