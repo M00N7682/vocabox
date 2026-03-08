@@ -91,10 +91,6 @@ export function TextbooksClient({ textbooks, chaptersMap, subjects }: Props) {
   }
 
   const overallProgress = getProgress(chapters);
-  const progressPct =
-    overallProgress.total > 0
-      ? Math.round((overallProgress.completed / overallProgress.total) * 100)
-      : 0;
 
   return (
     <div className="flex gap-6 flex-1">

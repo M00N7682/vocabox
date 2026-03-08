@@ -9,7 +9,7 @@ type StudentItem = { id: string; name: string; grade: string | null };
 type Props = {
   classId: string;
   students: StudentItem[];
-  records: any[];
+  records: { student_id: string; record_date: string; category: string; value: string | null }[];
   categories: string[];
   dateFrom: string;
   dateTo: string;
@@ -76,7 +76,7 @@ export function ClassQuickRecordsTab({
   function handleSave() {
     if (editedValues.size === 0) return;
 
-    const records: {
+    const toSave: {
       class_id: string;
       student_id: string;
       record_date: string;
@@ -87,7 +87,7 @@ export function ClassQuickRecordsTab({
     editedValues.forEach((value, key) => {
       const [studentId, date] = key.split("_");
       if (value.trim()) {
-        records.push({
+        toSave.push({
           class_id: classId,
           student_id: studentId,
           record_date: date,
@@ -97,10 +97,10 @@ export function ClassQuickRecordsTab({
       }
     });
 
-    if (records.length === 0) return;
+    if (toSave.length === 0) return;
 
     startTransition(async () => {
-      await bulkSaveQuickRecords(records);
+      await bulkSaveQuickRecords(toSave);
       setEditedValues(new Map());
     });
   }

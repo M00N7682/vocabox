@@ -2,9 +2,20 @@
 
 import Link from "next/link";
 
+type AssessmentScore = { student_id: string; score: number | null; status: string };
+type AssessmentItem = {
+  id: string;
+  name: string;
+  date: string;
+  type: string;
+  total_points: number;
+  status: string;
+  assessment_scores?: AssessmentScore[];
+};
+
 type Props = {
   classId: string;
-  assessments: any[];
+  assessments: AssessmentItem[];
   students: { id: string; name: string }[];
 };
 
@@ -50,12 +61,12 @@ export function ClassAssessmentsTab({ classId, assessments, students }: Props) {
           <span className="w-[80px] text-xs font-semibold text-eo-text-secondary">상태</span>
         </div>
 
-        {assessments.map((a: any, i: number) => {
+        {assessments.map((a, i) => {
           const scores = a.assessment_scores ?? [];
           const totalStudents = students.length;
-          const responded = scores.filter((s: any) => s.score !== null).length;
+          const responded = scores.filter((s) => s.score !== null).length;
           const avgScore = responded > 0
-            ? Math.round(scores.reduce((sum: number, s: any) => sum + (s.score ?? 0), 0) / responded)
+            ? Math.round(scores.reduce((sum: number, s) => sum + (s.score ?? 0), 0) / responded)
             : "-";
 
           return (

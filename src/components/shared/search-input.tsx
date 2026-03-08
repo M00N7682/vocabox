@@ -18,10 +18,16 @@ export function SearchInput({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [value, setValue] = useState(searchParams.get(paramKey) || "");
+  const paramValue = searchParams.get(paramKey) || "";
+  const [value, setValue] = useState(paramValue);
 
   useEffect(() => {
-    setValue(searchParams.get(paramKey) || "");
+    // Sync local state when URL param changes externally
+    const current = searchParams.get(paramKey) || "";
+    if (current !== value) {
+      setValue(current);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, paramKey]);
 
   const updateSearch = useCallback(

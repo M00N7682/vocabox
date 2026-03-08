@@ -8,7 +8,6 @@ import { FilterDropdown } from "@/components/shared/filter-dropdown";
 import { SearchInput } from "@/components/shared/search-input";
 import { addStudentToSubject, removeStudentFromSubject, deleteSubject } from "@/lib/actions/subjects";
 import type { Subject, Profile } from "@/types/database";
-import Link from "next/link";
 
 type StudentItem = { id: string; name: string; grade: string | null };
 

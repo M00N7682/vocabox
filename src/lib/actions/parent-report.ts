@@ -85,7 +85,7 @@ export async function generateClassReportTokens(classId: string) {
   const results: { studentId: string; studentName: string; parentPhone: string | null; token: string }[] = [];
 
   for (const cs of classStudents) {
-    const student = (cs as any).students;
+    const student = (cs as unknown as { students: { id: string; name: string; parent_phone: string | null } | null }).students;
     if (!student) continue;
 
     // Check existing

@@ -281,7 +281,7 @@ export async function getClassTextbooks(
   if (error) throw error;
 
   const textbooks = (data ?? []).map(
-    (row: any) => row.textbooks as unknown as TextbookWithSubject
+    (row) => (row as unknown as { textbooks: TextbookWithSubject }).textbooks
   );
   return textbooks;
 }
@@ -296,6 +296,6 @@ export async function getTextbookClasses(textbookId: string) {
 
   if (error) throw error;
 
-  const classes = (data ?? []).map((row: any) => row.classes);
+  const classes = (data ?? []).map((row) => (row as unknown as { classes: unknown }).classes);
   return classes;
 }

@@ -154,7 +154,7 @@ export async function getClassDetail(classId: string) {
 
   return {
     ...classResult.data,
-    textbooks: (textbooksResult.data ?? []).map((ct: any) => ct.textbooks).filter(Boolean),
+    textbooks: (textbooksResult.data ?? []).map((ct) => (ct as unknown as { textbooks: unknown }).textbooks).filter(Boolean),
   };
 }
 

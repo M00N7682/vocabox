@@ -5,10 +5,13 @@ import { Plus, X, ChevronDown, ChevronRight, BookOpen } from "lucide-react";
 import { linkTextbookToClass, unlinkTextbookFromClass } from "@/lib/actions/textbooks";
 import { updateChapterStatus } from "@/lib/actions/textbooks";
 
+type TextbookItem = { id: string; name: string; year: number; grade: string | null; subjects?: { name: string } | null };
+type ChapterItem = { id: string; title: string; status: string; children?: ChapterItem[] };
+
 type Props = {
   classId: string;
-  linkedTextbooks: any[];
-  chaptersMap: Record<string, any[]>;
+  linkedTextbooks: TextbookItem[];
+  chaptersMap: Record<string, ChapterItem[]>;
 };
 
 const statusConfig: Record<string, { color: string; dotColor: string }> = {
@@ -32,7 +35,7 @@ export function ClassTextbooksTab({ classId, linkedTextbooks, chaptersMap }: Pro
     });
   }
 
-  function getProgress(chs: any[]): { completed: number; total: number } {
+  function getProgress(chs: ChapterItem[]): { completed: number; total: number } {
     let completed = 0;
     let total = 0;
     for (const ch of chs) {
@@ -48,7 +51,7 @@ export function ClassTextbooksTab({ classId, linkedTextbooks, chaptersMap }: Pro
     return { completed, total };
   }
 
-  const activeTextbook = linkedTextbooks.find((t: any) => t.id === activeTextbookId);
+  const activeTextbook = linkedTextbooks.find((t) => t.id === activeTextbookId);
   const chapters = chaptersMap[activeTextbookId] ?? [];
   const progress = getProgress(chapters);
   const progressPct = progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 0;
@@ -72,7 +75,7 @@ export function ClassTextbooksTab({ classId, linkedTextbooks, chaptersMap }: Pro
         <div className="flex gap-4">
           {/* Textbook sidebar */}
           <div className="flex flex-col gap-2 w-[240px] shrink-0">
-            {linkedTextbooks.map((tb: any) => {
+            {linkedTextbooks.map((tb) => {
               const isActive = tb.id === activeTextbookId;
               const tbChapters = chaptersMap[tb.id] ?? [];
               const tbProgress = getProgress(tbChapters);
@@ -125,7 +128,7 @@ export function ClassTextbooksTab({ classId, linkedTextbooks, chaptersMap }: Pro
                   <div className="h-full rounded-full bg-eo-primary transition-all" style={{ width: `${progressPct}%` }} />
                 </div>
                 <div className="flex flex-col mt-2">
-                  {chapters.map((ch: any) => {
+                  {chapters.map((ch) => {
                     const isExpanded = expandedChapters.has(ch.id);
                     const chProgress = getProgress(ch.children ?? []);
                     return (
@@ -144,7 +147,7 @@ export function ClassTextbooksTab({ classId, linkedTextbooks, chaptersMap }: Pro
                             {chProgress.completed}/{chProgress.total} 완료
                           </span>
                         </div>
-                        {isExpanded && ch.children?.map((sub: any) => {
+                        {isExpanded && ch.children?.map((sub) => {
                           const cfg = statusConfig[sub.status] ?? statusConfig["미진행"];
                           const nextStatus = sub.status === "미진행" ? "진행중" : sub.status === "진행중" ? "완료" : "미진행";
                           return (
@@ -194,7 +197,7 @@ export function ClassTextbooksTab({ classId, linkedTextbooks, chaptersMap }: Pro
       {showLinkDialog && (
         <LinkTextbookDialog
           classId={classId}
-          linkedIds={new Set(linkedTextbooks.map((t: any) => t.id))}
+          linkedIds={new Set(linkedTextbooks.map((t) => t.id))}
           onClose={() => setShowLinkDialog(false)}
         />
       )}
@@ -212,7 +215,7 @@ function LinkTextbookDialog({
   onClose: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
-  const [textbooks, setTextbooks] = useState<any[]>([]);
+  const [textbooks, setTextbooks] = useState<TextbookItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -225,7 +228,7 @@ function LinkTextbookDialog({
       .catch(() => setLoading(false));
   }, []);
 
-  const available = textbooks.filter((t: any) => !linkedIds.has(t.id));
+  const available = textbooks.filter((t) => !linkedIds.has(t.id));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
@@ -238,7 +241,7 @@ function LinkTextbookDialog({
           {loading ? (
             <span className="text-sm text-eo-text-secondary">로딩중...</span>
           ) : available.length > 0 ? (
-            available.map((tb: any) => (
+            available.map((tb) => (
               <button
                 key={tb.id}
                 onClick={() => {

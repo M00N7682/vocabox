@@ -33,7 +33,7 @@ export default async function ScoresPage({
 
     // Filter by class if selected
     const filteredAssessments = params.class
-      ? displayAssessments.filter((a: any) => a.class_id === params.class)
+      ? displayAssessments.filter((a) => a.class_id === params.class)
       : displayAssessments;
 
     const classOptions = classes.map((c) => ({ value: c.id, label: c.name }));

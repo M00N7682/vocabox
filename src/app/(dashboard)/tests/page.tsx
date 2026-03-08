@@ -64,13 +64,6 @@ export default function TestsPage() {
       });
   }, [selectedBook, shuffle]);
 
-  // When shuffle is toggled off, reset shuffled words to original order
-  useEffect(() => {
-    if (!shuffle) {
-      setShuffledWords(words);
-    }
-  }, [shuffle, words]);
-
   const selectedStudentName =
     students.find((s) => s.id === selectedStudent)?.name ?? "";
   const selectedBookTitle =

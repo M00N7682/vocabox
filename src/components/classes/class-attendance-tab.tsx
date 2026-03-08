@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 type StudentItem = { id: string; name: string; grade: string | null };
@@ -9,7 +7,7 @@ type StudentItem = { id: string; name: string; grade: string | null };
 type Props = {
   classId: string;
   students: StudentItem[];
-  attendance: any[];
+  attendance: { student_id: string; date: string; status: string }[];
   dateFrom: string;
   dateTo: string;
 };

@@ -23,18 +23,35 @@ const tabs = [
   { id: "records", label: "수시기록", icon: Grid3X3 },
 ];
 
+type AssessmentScore = { student_id: string; score: number | null; status: string };
+type AssessmentItem = {
+  id: string; name: string; date: string; type: string;
+  total_points: number; status: string;
+  assessment_scores?: AssessmentScore[];
+};
+type AssignmentStudent = { student_id: string; status: string; submitted_at: string | null };
+type AssignmentItem = {
+  id: string; title: string; due_date: string | null;
+  difficulty: string | null; is_required: boolean; created_at: string | null;
+  assignment_students?: AssignmentStudent[];
+};
+type AttendanceItem = { student_id: string; date: string; status: string };
+type TextbookItem = { id: string; name: string; year: number; grade: string | null; subjects?: { name: string } | null };
+type ChapterItem = { id: string; title: string; status: string; children?: ChapterItem[] };
+type QuickRecordItem = { student_id: string; record_date: string; category: string; value: string | null };
+
 type Props = {
   classId: string;
   className: string;
   subjectId: string | null;
   students: (StudentItem & { school: string | null; is_active: boolean })[];
   allStudents: StudentItem[];
-  assessments: any[];
-  assignments: any[];
-  attendance: any[];
-  textbooks: any[];
-  chaptersMap: Record<string, any[]>;
-  quickRecords: any[];
+  assessments: AssessmentItem[];
+  assignments: AssignmentItem[];
+  attendance: AttendanceItem[];
+  textbooks: TextbookItem[];
+  chaptersMap: Record<string, ChapterItem[]>;
+  quickRecords: QuickRecordItem[];
   categories: string[];
   dateFrom: string;
   dateTo: string;
@@ -72,13 +89,13 @@ export function ClassDetailClient({
 
   // Overview stats
   const totalAssessments = assessments.length;
-  const completedAssessments = assessments.filter((a: any) => a.status === "완료").length;
+  const completedAssessments = assessments.filter((a) => a.status === "완료").length;
   const totalAssignments = assignments.length;
-  const overdueAssignments = assignments.filter((a: any) => {
+  const overdueAssignments = assignments.filter((a) => {
     const today = new Date().toISOString().split("T")[0];
-    return a.due_date < today;
+    return a.due_date && a.due_date < today;
   }).length;
-  const attendancePresent = attendance.filter((a: any) => a.status === "출석" || a.status === "지각").length;
+  const attendancePresent = attendance.filter((a) => a.status === "출석" || a.status === "지각").length;
   const attendanceTotal = attendance.length;
   const attendanceRate = attendanceTotal > 0 ? Math.round((attendancePresent / attendanceTotal) * 100) : 0;
 
@@ -255,7 +272,7 @@ export function ClassDetailClient({
               </div>
               {textbooks.length > 0 ? (
                 <div className="flex flex-col gap-2">
-                  {textbooks.slice(0, 3).map((tb: any) => (
+                  {textbooks.slice(0, 3).map((tb) => (
                     <div key={tb.id} className="flex items-center gap-2 text-[13px]">
                       <BookOpen className="w-3.5 h-3.5 text-eo-text-secondary" />
                       <span className="text-eo-text-primary">{tb.name}</span>
@@ -281,7 +298,7 @@ export function ClassDetailClient({
               </div>
               {assessments.length > 0 ? (
                 <div className="flex flex-col gap-2">
-                  {assessments.slice(0, 3).map((a: any) => {
+                  {assessments.slice(0, 3).map((a) => {
                     const statusStyle = a.status === "완료" ? "text-eo-success" : a.status === "진행중" ? "text-eo-warning" : "text-eo-text-secondary";
                     return (
                       <div key={a.id} className="flex items-center gap-2 text-[13px]">

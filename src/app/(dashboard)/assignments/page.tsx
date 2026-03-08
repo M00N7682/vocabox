@@ -92,7 +92,7 @@ export default async function AssignmentsPage({
 
   // Filter by class if selected
   const filteredAssignments = params.class
-    ? assignments.filter((a: any) => a.class_id === params.class)
+    ? assignments.filter((a) => a.class_id === params.class)
     : assignments;
 
   const subjectOptions = subjects.map((s) => ({

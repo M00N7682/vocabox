@@ -2,8 +2,19 @@
 
 import Link from "next/link";
 
+type AssignmentStudent = { student_id: string; status: string; submitted_at: string | null };
+type AssignmentItem = {
+  id: string;
+  title: string;
+  due_date: string | null;
+  difficulty: string | null;
+  is_required: boolean;
+  created_at: string | null;
+  assignment_students?: AssignmentStudent[];
+};
+
 type Props = {
-  assignments: any[];
+  assignments: AssignmentItem[];
   students: { id: string; name: string }[];
 };
 
@@ -63,11 +74,11 @@ export function ClassAssignmentsTab({ assignments, students }: Props) {
           <span className="w-[60px] text-xs font-semibold text-eo-text-secondary">필수</span>
         </div>
 
-        {assignments.map((a: any, i: number) => {
+        {assignments.map((a, i) => {
           const createdDate = a.created_at?.slice(5, 10).replace("-", ".") ?? "-";
-          const assignmentStudents = (a.assignment_students ?? []).filter((as: any) => studentIds.has(as.student_id));
+          const assignmentStudents = (a.assignment_students ?? []).filter((s) => studentIds.has(s.student_id));
           const total = assignmentStudents.length;
-          const submitted = assignmentStudents.filter((as: any) => as.status === "submitted").length;
+          const submitted = assignmentStudents.filter((s) => s.status === "submitted").length;
           const pct = total > 0 ? Math.round((submitted / total) * 100) : 0;
           const { label: dueLabel, isOverdue } = a.due_date ? getRelativeDueDate(a.due_date) : { label: "-", isOverdue: false };
           const diffKey = a.difficulty ?? "";
