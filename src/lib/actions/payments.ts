@@ -185,7 +185,7 @@ export async function deletePayment(paymentId: string) {
 }
 
 // Generate reminder message text for a payment
-export function generateReminderMessage(
+export async function generateReminderMessage(
   studentName: string,
   academyName: string,
   description: string,
