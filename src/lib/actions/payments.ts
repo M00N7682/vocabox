@@ -191,7 +191,7 @@ export async function generateReminderMessage(
   description: string,
   amount: number,
   dueDate: string
-): string {
+): Promise<string> {
   const formattedAmount = amount.toLocaleString("ko-KR");
   const formattedDate = new Date(dueDate).toLocaleDateString("ko-KR", {
     year: "numeric",
