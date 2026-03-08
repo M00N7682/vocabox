@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Search, ChevronDown, ChevronRight, FileText, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createChapter, updateChapterStatus, deleteChapter, updateTextbook, deleteTextbook, getTextbookPdfUrl } from "@/lib/actions/textbooks";
+import { createChapter, updateChapter, updateChapterStatus, deleteChapter, updateTextbook, deleteTextbook, getTextbookPdfUrl } from "@/lib/actions/textbooks";
 import type { ChapterWithChildren, TextbookWithSubject } from "@/lib/actions/textbooks";
 
 type Props = {
@@ -27,6 +27,8 @@ export function TextbooksClient({ textbooks, chaptersMap, subjects }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [chapterDialogOpen, setChapterDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editChapterDialogOpen, setEditChapterDialogOpen] = useState(false);
+  const [editingChapter, setEditingChapter] = useState<ChapterWithChildren | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const [rightView, setRightView] = useState<RightView>("chapters");
@@ -234,7 +236,7 @@ export function TextbooksClient({ textbooks, chaptersMap, subjects }: Props) {
                   return (
                     <div key={ch.id} className="flex flex-col">
                       <div
-                        className="flex items-center gap-2 py-2.5 cursor-pointer"
+                        className="flex items-center gap-2 py-2.5 cursor-pointer group"
                         onClick={() => toggleExpand(ch.id)}
                       >
                         {ch.children && ch.children.length > 0 ? (
@@ -256,6 +258,33 @@ export function TextbooksClient({ textbooks, chaptersMap, subjects }: Props) {
                             style={{ width: `${chPct}%` }}
                           />
                         </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingChapter(ch);
+                            setEditChapterDialogOpen(true);
+                          }}
+                          className="text-eo-text-tertiary hover:text-eo-primary opacity-0 group-hover:opacity-100 transition-opacity ml-auto"
+                          title="수정"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`"${ch.title}" 대단원을 삭제하시겠습니까? 하위 단원도 모두 삭제됩니다.`)) {
+                              startTransition(async () => {
+                                await deleteChapter(ch.id);
+                              });
+                            }
+                          }}
+                          className="text-eo-text-tertiary hover:text-eo-danger opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="삭제"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       </div>
                       {isExpanded &&
                         ch.children?.map((sub) => {
@@ -278,12 +307,23 @@ export function TextbooksClient({ textbooks, chaptersMap, subjects }: Props) {
                               </span>
                               <button
                                 type="button"
+                                onClick={() => {
+                                  setEditingChapter(sub);
+                                  setEditChapterDialogOpen(true);
+                                }}
+                                className="text-eo-text-tertiary hover:text-eo-primary opacity-0 group-hover:opacity-100 transition-opacity ml-auto"
+                                title="수정"
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
                                 onClick={() =>
                                   startTransition(async () => {
                                     await deleteChapter(sub.id);
                                   })
                                 }
-                                className="text-eo-text-tertiary hover:text-eo-danger opacity-0 group-hover:opacity-100 transition-opacity ml-auto"
+                                className="text-eo-text-tertiary hover:text-eo-danger opacity-0 group-hover:opacity-100 transition-opacity"
                                 title="삭제"
                               >
                                 <Trash2 className="w-3 h-3" />
@@ -431,6 +471,132 @@ export function TextbooksClient({ textbooks, chaptersMap, subjects }: Props) {
                     {isPending ? "저장중..." : "저장"}
                   </Button>
                 </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Chapter Dialog */}
+      {editChapterDialogOpen && activeTextbook && editingChapter && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => {
+            setEditChapterDialogOpen(false);
+            setEditingChapter(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-xl w-[440px] max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <form
+              action={(formData) => {
+                startTransition(async () => {
+                  await updateChapter(editingChapter.id, formData);
+                  setEditChapterDialogOpen(false);
+                  setEditingChapter(null);
+                });
+              }}
+            >
+              <input type="hidden" name="textbook_id" value={activeTextbook.id} />
+
+              <div className="flex items-center justify-between px-6 py-4 border-b border-eo-border">
+                <h2 className="text-lg font-bold text-eo-text-primary">
+                  단원 수정
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditChapterDialogOpen(false);
+                    setEditingChapter(null);
+                  }}
+                  className="text-eo-text-secondary hover:text-eo-text-primary"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-4 px-6 py-5">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-eo-text-primary">
+                    단원명 *
+                  </label>
+                  <Input
+                    name="title"
+                    defaultValue={editingChapter.title}
+                    placeholder="단원 제목을 입력하세요"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <label className="text-sm font-medium text-eo-text-primary">
+                      단계
+                    </label>
+                    <select
+                      name="level"
+                      defaultValue={editingChapter.level ?? "major"}
+                      className="h-10 px-3 rounded-lg border border-eo-border text-sm"
+                    >
+                      <option value="major">대단원</option>
+                      <option value="middle">중단원</option>
+                      <option value="minor">소단원</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <label className="text-sm font-medium text-eo-text-primary">
+                      상위 단원
+                    </label>
+                    <select
+                      name="parent_chapter_id"
+                      defaultValue={editingChapter.parent_chapter_id ?? ""}
+                      className="h-10 px-3 rounded-lg border border-eo-border text-sm"
+                    >
+                      <option value="">없음 (최상위)</option>
+                      {chapters
+                        .filter((ch) => ch.id !== editingChapter.id)
+                        .map((ch) => (
+                          <option key={ch.id} value={ch.id}>
+                            {ch.title}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-eo-text-primary">
+                    정렬 순서
+                  </label>
+                  <Input
+                    type="number"
+                    name="sort_order"
+                    defaultValue={editingChapter.sort_order ?? 0}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end px-6 py-4 border-t border-eo-border gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setEditChapterDialogOpen(false);
+                    setEditingChapter(null);
+                  }}
+                >
+                  취소
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className="bg-eo-primary hover:bg-[#4338CA] text-white"
+                >
+                  {isPending ? "저장중..." : "저장"}
+                </Button>
               </div>
             </form>
           </div>

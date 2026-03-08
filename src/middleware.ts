@@ -38,6 +38,13 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Public pages - skip auth check entirely
+  const publicPaths = ["/report"];
+  const isPublic = publicPaths.some(
+    (p) => pathname === p || pathname.startsWith(p + "/")
+  );
+  if (isPublic) return supabaseResponse;
+
   // Auth pages - redirect to dashboard if already logged in
   const authPages = ["/login", "/signup", "/forgot-password"];
   if (user && authPages.includes(pathname)) {
@@ -64,6 +71,7 @@ export async function middleware(request: NextRequest) {
     "/analytics",
     "/assignments",
     "/notifications",
+    "/payments",
   ];
 
   const isProtected = protectedPaths.some(

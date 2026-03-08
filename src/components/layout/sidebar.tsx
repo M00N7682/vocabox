@@ -14,6 +14,7 @@ import {
   CalendarCheck,
   FileText,
   Bell,
+  Wallet,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -53,6 +54,7 @@ const navSections = [
     items: [
       { label: "출결 관리", href: "/attendance", icon: CalendarCheck },
       { label: "과제 관리", href: "/assignments", icon: FileText },
+      { label: "수납 관리", href: "/payments", icon: Wallet },
       { label: "알림", href: "/notifications", icon: Bell, badge: true },
     ],
   },

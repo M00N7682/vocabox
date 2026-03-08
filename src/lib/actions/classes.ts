@@ -134,3 +134,83 @@ export async function deleteClass(id: string) {
   revalidatePath("/classes");
   return { success: true };
 }
+
+export async function getClassDetail(classId: string) {
+  const supabase = await createClient();
+
+  const [classResult, textbooksResult] = await Promise.all([
+    supabase
+      .from("classes")
+      .select("*, subjects(id, name, color), class_students(student_id, students(id, name, grade, school, is_active))")
+      .eq("id", classId)
+      .single(),
+    supabase
+      .from("class_textbooks")
+      .select("textbook_id, textbooks(id, name, subject_id, year, grade, subjects(name, color))")
+      .eq("class_id", classId),
+  ]);
+
+  if (classResult.error) throw classResult.error;
+
+  return {
+    ...classResult.data,
+    textbooks: (textbooksResult.data ?? []).map((ct: any) => ct.textbooks).filter(Boolean),
+  };
+}
+
+export async function getClassAssessments(classId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("assessments")
+    .select("*, subjects(name, color), assessment_scores(student_id, score, status)")
+    .eq("class_id", classId)
+    .order("date", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getClassAssignments(classId: string) {
+  const supabase = await createClient();
+  // First try class_id, then fall back to subject-based
+  const { data: cls } = await supabase.from("classes").select("subject_id").eq("id", classId).single();
+
+  let query = supabase
+    .from("assignments")
+    .select("*, subjects(name, color), assignment_students(student_id, status, submitted_at)")
+    .order("due_date", { ascending: false });
+
+  // Try to get assignments directly linked to this class, or linked to the class's subject
+  if (cls?.subject_id) {
+    query = query.or(`class_id.eq.${classId},and(subject_id.eq.${cls.subject_id},class_id.is.null)`);
+  } else {
+    query = query.eq("class_id", classId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getClassAttendance(classId: string, dateFrom: string, dateTo: string) {
+  const supabase = await createClient();
+
+  // Get student IDs in this class
+  const { data: classStudents } = await supabase
+    .from("class_students")
+    .select("student_id")
+    .eq("class_id", classId);
+
+  const studentIds = (classStudents ?? []).map(cs => cs.student_id);
+  if (studentIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("attendance")
+    .select("*, students(id, name), subjects(name, color)")
+    .in("student_id", studentIds)
+    .gte("date", dateFrom)
+    .lte("date", dateTo)
+    .order("date", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}

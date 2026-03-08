@@ -460,6 +460,7 @@ export type Database = {
           subject_id: string;
           textbook_id: string | null;
           template_id: string | null;
+          class_id: string | null;
           type: "시험" | "퀴즈" | "과제" | "수행평가" | "출석점수";
           date: string;
           total_points: number;
@@ -477,6 +478,7 @@ export type Database = {
           subject_id: string;
           textbook_id?: string | null;
           template_id?: string | null;
+          class_id?: string | null;
           type?: "시험" | "퀴즈" | "과제" | "수행평가" | "출석점수";
           date: string;
           total_points?: number;
@@ -494,6 +496,7 @@ export type Database = {
           subject_id?: string;
           textbook_id?: string | null;
           template_id?: string | null;
+          class_id?: string | null;
           type?: "시험" | "퀴즈" | "과제" | "수행평가" | "출석점수";
           date?: string;
           total_points?: number;
@@ -654,6 +657,7 @@ export type Database = {
           academy_id: string;
           title: string;
           subject_id: string;
+          class_id: string | null;
           chapter_id: string | null;
           description: string | null;
           due_date: string;
@@ -668,6 +672,7 @@ export type Database = {
           academy_id: string;
           title: string;
           subject_id: string;
+          class_id?: string | null;
           chapter_id?: string | null;
           description?: string | null;
           due_date: string;
@@ -682,6 +687,7 @@ export type Database = {
           academy_id?: string;
           title?: string;
           subject_id?: string;
+          class_id?: string | null;
           chapter_id?: string | null;
           description?: string | null;
           due_date?: string;
@@ -800,6 +806,146 @@ export type Database = {
           created_at?: string;
         };
       };
+      class_textbooks: {
+        Row: {
+          id: string;
+          class_id: string;
+          textbook_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          class_id: string;
+          textbook_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          class_id?: string;
+          textbook_id?: string;
+          created_at?: string;
+        };
+      };
+      quick_records: {
+        Row: {
+          id: string;
+          academy_id: string;
+          class_id: string;
+          student_id: string;
+          record_date: string;
+          category: string;
+          label: string | null;
+          value: string | null;
+          numeric_value: number | null;
+          note: string | null;
+          recorded_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          academy_id: string;
+          class_id: string;
+          student_id: string;
+          record_date: string;
+          category?: string;
+          label?: string | null;
+          value?: string | null;
+          numeric_value?: number | null;
+          note?: string | null;
+          recorded_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string;
+          class_id?: string;
+          student_id?: string;
+          record_date?: string;
+          category?: string;
+          label?: string | null;
+          value?: string | null;
+          numeric_value?: number | null;
+          note?: string | null;
+          recorded_by?: string | null;
+          created_at?: string;
+        };
+      };
+      parent_report_tokens: {
+        Row: {
+          id: string;
+          academy_id: string;
+          student_id: string;
+          token: string;
+          is_active: boolean;
+          expires_at: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          academy_id: string;
+          student_id: string;
+          token?: string;
+          is_active?: boolean;
+          expires_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string;
+          student_id?: string;
+          token?: string;
+          is_active?: boolean;
+          expires_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+      };
+      payments: {
+        Row: {
+          id: string;
+          academy_id: string;
+          student_id: string;
+          amount: number;
+          description: string;
+          due_date: string;
+          status: "pending" | "paid" | "overdue" | "cancelled";
+          paid_at: string | null;
+          payment_method: "cash" | "transfer" | "card" | "auto" | "other" | null;
+          memo: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          academy_id: string;
+          student_id: string;
+          amount: number;
+          description: string;
+          due_date: string;
+          status?: "pending" | "paid" | "overdue" | "cancelled";
+          paid_at?: string | null;
+          payment_method?: "cash" | "transfer" | "card" | "auto" | "other" | null;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          academy_id?: string;
+          student_id?: string;
+          amount?: number;
+          description?: string;
+          due_date?: string;
+          status?: "pending" | "paid" | "overdue" | "cancelled";
+          paid_at?: string | null;
+          payment_method?: "cash" | "transfer" | "card" | "auto" | "other" | null;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+      };
       academy_settings: {
         Row: {
           id: string;
@@ -859,6 +1005,30 @@ export type Database = {
         Args: Record<string, never>;
         Returns: string;
       };
+      get_report_by_token: {
+        Args: { p_token: string };
+        Returns: { student_id: string; academy_id: string; student_name: string; academy_name: string }[];
+      };
+      get_student_attendance_by_token: {
+        Args: { p_token: string };
+        Returns: { date: string; status: string; subject_name: string }[];
+      };
+      get_student_assignments_by_token: {
+        Args: { p_token: string };
+        Returns: { title: string; due_date: string; status: string; subject_name: string }[];
+      };
+      get_student_records_by_token: {
+        Args: { p_token: string };
+        Returns: { record_date: string; category: string; label: string; value: string; numeric_value: number }[];
+      };
+      get_student_scores_by_token: {
+        Args: { p_token: string };
+        Returns: { assessment_name: string; assessment_date: string; assessment_type: string; score: number; total_points: number; status: string; subject_name: string }[];
+      };
+      get_student_payments_by_token: {
+        Args: { p_token: string };
+        Returns: { description: string; amount: number; due_date: string; status: string; paid_at: string }[];
+      };
     };
   };
 };
@@ -888,3 +1058,7 @@ export type AssignmentStudent = Database["public"]["Tables"]["assignment_student
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 export type RiskAlert = Database["public"]["Tables"]["risk_alerts"]["Row"];
 export type AcademySettings = Database["public"]["Tables"]["academy_settings"]["Row"];
+export type ClassTextbook = Database["public"]["Tables"]["class_textbooks"]["Row"];
+export type QuickRecord = Database["public"]["Tables"]["quick_records"]["Row"];
+export type ParentReportToken = Database["public"]["Tables"]["parent_report_tokens"]["Row"];
+export type Payment = Database["public"]["Tables"]["payments"]["Row"];

@@ -295,6 +295,9 @@ export function AssessmentAddButton({ subjects, classes, students }: Props) {
                     value={id}
                   />
                 ))}
+                {selectedClassIds.size > 0 && (
+                  <input type="hidden" name="class_id" value={Array.from(selectedClassIds)[0]} />
+                )}
               </div>
 
               <div className="flex items-center justify-end px-6 py-4 border-t border-eo-border gap-2">

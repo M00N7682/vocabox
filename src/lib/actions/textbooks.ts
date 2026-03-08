@@ -236,3 +236,66 @@ export async function deleteChapter(id: string) {
   revalidatePath("/textbooks");
   return { success: true };
 }
+
+export async function linkTextbookToClass(classId: string, textbookId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("class_textbooks")
+    .insert({ class_id: classId, textbook_id: textbookId });
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/classes");
+  return { success: true };
+}
+
+export async function unlinkTextbookFromClass(
+  classId: string,
+  textbookId: string
+) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("class_textbooks")
+    .delete()
+    .eq("class_id", classId)
+    .eq("textbook_id", textbookId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/classes");
+  return { success: true };
+}
+
+export async function getClassTextbooks(
+  classId: string
+): Promise<TextbookWithSubject[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("class_textbooks")
+    .select("textbooks(*, subjects(name, color))")
+    .eq("class_id", classId);
+
+  if (error) throw error;
+
+  const textbooks = (data ?? []).map(
+    (row: any) => row.textbooks as unknown as TextbookWithSubject
+  );
+  return textbooks;
+}
+
+export async function getTextbookClasses(textbookId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("class_textbooks")
+    .select("classes(*)")
+    .eq("textbook_id", textbookId);
+
+  if (error) throw error;
+
+  const classes = (data ?? []).map((row: any) => row.classes);
+  return classes;
+}

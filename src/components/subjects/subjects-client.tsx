@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Users, X, Trash2 } from "lucide-react";
+import { Plus, Users, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SubjectFormDialog } from "./subject-form-dialog";
 import { FilterDropdown } from "@/components/shared/filter-dropdown";
@@ -165,7 +165,6 @@ export function SubjectsClient({ subjects, teachers, students }: Props) {
 
 function SubjectStudentManager({
   subjectId,
-  enrolledStudents,
   allStudents,
   enrolledIds,
 }: {
@@ -175,58 +174,56 @@ function SubjectStudentManager({
   enrolledIds: Set<string>;
 }) {
   const [isPending, startTransition] = useTransition();
-  const [showPicker, setShowPicker] = useState(false);
-  const available = allStudents.filter((s) => !enrolledIds.has(s.id));
+  const [search, setSearch] = useState("");
+
+  const filtered = allStudents.filter(
+    (s) => s.name.toLowerCase().includes(search.toLowerCase()) || (s.grade ?? "").includes(search),
+  );
 
   return (
     <div className="flex flex-col gap-2 pt-2 border-t border-eo-border">
-      {enrolledStudents.map((s) => (
-        <div key={s.id} className="flex items-center justify-between text-[13px]">
-          <Link href={`/students/${s.id}`} className="text-eo-text-primary hover:text-eo-primary">
-            {s.name} <span className="text-eo-text-tertiary">{s.grade ?? ""}</span>
-          </Link>
-          <button
-            onClick={() => startTransition(async () => { await removeStudentFromSubject(subjectId, s.id); })}
-            disabled={isPending}
-            className="text-eo-text-tertiary hover:text-eo-danger"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      ))}
-      {enrolledStudents.length === 0 && (
-        <span className="text-[12px] text-eo-text-secondary">수강 학생이 없습니다</span>
-      )}
-      {available.length > 0 && (
-        <>
-          <button
-            onClick={() => setShowPicker(!showPicker)}
-            className="flex items-center gap-1 text-[12px] text-eo-primary hover:text-[#4338CA] mt-1"
-          >
-            <Plus className="w-3 h-3" />
-            학생 추가
-          </button>
-          {showPicker && (
-            <div className="flex flex-col gap-0.5 p-2 bg-eo-bg-page rounded-lg border border-eo-border max-h-[200px] overflow-auto">
-              {available.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => {
-                    startTransition(async () => {
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-eo-text-tertiary" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="학생 검색..."
+          className="w-full h-8 pl-7 pr-2 text-[12px] rounded-lg border border-eo-border bg-eo-bg-page focus:outline-none focus:ring-1 focus:ring-eo-primary"
+        />
+      </div>
+      <div className="flex flex-col gap-0.5 max-h-[200px] overflow-auto">
+        {filtered.map((s) => {
+          const enrolled = enrolledIds.has(s.id);
+          return (
+            <label
+              key={s.id}
+              className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-eo-bg-page cursor-pointer text-[13px]"
+            >
+              <input
+                type="checkbox"
+                checked={enrolled}
+                disabled={isPending}
+                onChange={() => {
+                  startTransition(async () => {
+                    if (enrolled) {
+                      await removeStudentFromSubject(subjectId, s.id);
+                    } else {
                       await addStudentToSubject(subjectId, s.id);
-                      setShowPicker(false);
-                    });
-                  }}
-                  disabled={isPending}
-                  className="text-left text-[12px] px-2 py-1.5 rounded hover:bg-white text-eo-text-primary"
-                >
-                  {s.name} <span className="text-eo-text-tertiary">{s.grade ?? ""}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </>
-      )}
+                    }
+                  });
+                }}
+                className="w-3.5 h-3.5 rounded border-eo-border text-eo-primary focus:ring-eo-primary"
+              />
+              <span className="text-eo-text-primary">{s.name}</span>
+              <span className="text-eo-text-tertiary">{s.grade ?? ""}</span>
+            </label>
+          );
+        })}
+        {filtered.length === 0 && (
+          <span className="text-[12px] text-eo-text-secondary px-2 py-1">검색 결과가 없습니다</span>
+        )}
+      </div>
     </div>
   );
 }

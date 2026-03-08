@@ -94,10 +94,10 @@ export async function getAssessmentScores(
 ): Promise<AssessmentScoreWithStudent[]> {
   const supabase = await createClient();
 
-  // 1. Get the assessment to know which subject it belongs to
+  // 1. Get the assessment to know which subject/class it belongs to
   const { data: assessment } = await supabase
     .from("assessments")
-    .select("subject_id")
+    .select("subject_id, class_id")
     .eq("id", assessmentId)
     .single();
 
@@ -112,8 +112,38 @@ export async function getAssessmentScores(
 
   const scores = (existingScores as unknown as AssessmentScoreWithStudent[]) ?? [];
 
-  // 3. If the assessment has a subject, fetch enrolled students and fill in missing ones
-  if (assessment?.subject_id) {
+  // 3. Fetch enrolled students and fill in missing ones
+  //    If class_id is set, only show students from that class; otherwise fall back to all subject students
+  if (assessment?.class_id) {
+    const { data: enrolled } = await supabase
+      .from("class_students")
+      .select("student_id, students(id, name)")
+      .eq("class_id", assessment.class_id);
+
+    if (enrolled) {
+      const existingStudentIds = new Set(scores.map((s) => s.student_id));
+      const missingStudents = enrolled.filter(
+        (e) => !existingStudentIds.has(e.student_id)
+      );
+
+      for (const ms of missingStudents) {
+        const student = ms.students as unknown as { id: string; name: string } | null;
+        scores.push({
+          id: "",
+          assessment_id: assessmentId,
+          student_id: ms.student_id,
+          score: null,
+          grade_value: null,
+          check_value: null,
+          status: "응시",
+          note: null,
+          recorded_by: null,
+          created_at: "",
+          students: student,
+        });
+      }
+    }
+  } else if (assessment?.subject_id) {
     const { data: enrolled } = await supabase
       .from("subject_students")
       .select("student_id, students(id, name)")
@@ -198,6 +228,8 @@ export async function createAssessment(formData: FormData) {
     }
   }
 
+  const classId = (formData.get("class_id") as string) || null;
+
   const { data: assessment, error } = await supabase
     .from("assessments")
     .insert({
@@ -206,6 +238,7 @@ export async function createAssessment(formData: FormData) {
       subject_id: parsed.data.subject_id,
       textbook_id: parsed.data.textbook_id || null,
       template_id: parsed.data.template_id || null,
+      class_id: classId,
       type: parsed.data.type || "시험",
       date: parsed.data.date,
       total_points: parsed.data.total_points ?? 100,

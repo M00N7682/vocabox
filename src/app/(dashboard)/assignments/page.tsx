@@ -3,6 +3,7 @@ import { AssignmentAddButton } from "@/components/assignments/assignment-add-but
 import { getAssignments } from "@/lib/actions/assignments";
 import { getSubjects } from "@/lib/actions/subjects";
 import { getStudents } from "@/lib/actions/students";
+import { getClasses } from "@/lib/actions/classes";
 import { SearchInput } from "@/components/shared/search-input";
 import { FilterDropdown } from "@/components/shared/filter-dropdown";
 import type { AssignmentWithDetails } from "@/lib/actions/assignments";
@@ -75,22 +76,32 @@ function ProgressBar({
 export default async function AssignmentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ subject?: string; search?: string }>;
+  searchParams: Promise<{ subject?: string; search?: string; class?: string }>;
 }) {
   const params = await searchParams;
 
-  const [assignments, subjects, students] = await Promise.all([
+  const [assignments, subjects, students, classes] = await Promise.all([
     getAssignments({
       subjectId: params.subject,
       search: params.search,
     }),
     getSubjects({ isActive: true }),
     getStudents({ activeOnly: true }),
+    getClasses(),
   ]);
+
+  // Filter by class if selected
+  const filteredAssignments = params.class
+    ? assignments.filter((a: any) => a.class_id === params.class)
+    : assignments;
 
   const subjectOptions = subjects.map((s) => ({
     value: s.id,
     label: s.name,
+  }));
+  const classOptions = classes.map((c) => ({
+    value: c.id,
+    label: c.name,
   }));
 
   return (
@@ -120,8 +131,14 @@ export default async function AssignmentsPage({
           options={subjectOptions}
           allLabel="과목 전체"
         />
+        <FilterDropdown
+          paramKey="class"
+          label="반"
+          options={classOptions}
+          allLabel="반 전체"
+        />
         <span className="text-[13px] font-medium text-eo-text-secondary ml-auto">
-          총 {assignments.length}건
+          총 {filteredAssignments.length}건
         </span>
       </div>
 
@@ -154,7 +171,7 @@ export default async function AssignmentsPage({
           </span>
         </div>
 
-        {assignments.map((a: AssignmentWithDetails, i) => {
+        {filteredAssignments.map((a: AssignmentWithDetails, i) => {
           const createdDate = a.created_at
             ? a.created_at.slice(5, 10).replace("-", ".")
             : "-";
@@ -178,7 +195,7 @@ export default async function AssignmentsPage({
               key={a.id}
               href={`/assignments/${a.id}`}
               className={`flex items-center px-5 py-3 hover:bg-eo-bg-surface transition-colors cursor-pointer ${
-                i < assignments.length - 1 ? "border-b border-eo-border" : ""
+                i < filteredAssignments.length - 1 ? "border-b border-eo-border" : ""
               }`}
             >
               <span className="w-[80px] text-[13px] text-eo-text-secondary">
@@ -244,7 +261,7 @@ export default async function AssignmentsPage({
           );
         })}
 
-        {assignments.length === 0 && (
+        {filteredAssignments.length === 0 && (
           <div className="flex items-center justify-center py-12 text-sm text-eo-text-secondary">
             등록된 과제가 없습니다.
           </div>
