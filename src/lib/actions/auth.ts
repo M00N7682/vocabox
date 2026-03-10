@@ -62,7 +62,7 @@ export async function signup(formData: FormData) {
     return { error: authError ? translateError(authError.message) : "회원가입에 실패했습니다." };
   }
 
-  // 2. Create academy
+  // 2. Create academy + profile via SECURITY DEFINER function (bypasses RLS)
   const slug =
     academyName
       .toLowerCase()
@@ -71,27 +71,17 @@ export async function signup(formData: FormData) {
     "-" +
     Math.random().toString(36).slice(2, 6);
 
-  const { data: academy, error: academyError } = await supabase
-    .from("academies")
-    .insert({ name: academyName, slug, phone: phone || null })
-    .select()
-    .single();
-
-  if (academyError || !academy) {
-    return { error: academyError?.message || "학원 생성에 실패했습니다." };
-  }
-
-  // 3. Create profile
-  const { error: profileError } = await supabase.from("profiles").insert({
-    id: authData.user.id,
-    academy_id: academy.id,
-    name: ownerName,
-    email,
-    role: "admin",
+  const { error: setupError } = await supabase.rpc("handle_signup", {
+    p_user_id: authData.user.id,
+    p_academy_name: academyName,
+    p_slug: slug,
+    p_phone: phone || null,
+    p_owner_name: ownerName,
+    p_email: email,
   });
 
-  if (profileError) {
-    return { error: profileError.message };
+  if (setupError) {
+    return { error: setupError.message || "학원 생성에 실패했습니다." };
   }
 
   redirect("/dashboard");
